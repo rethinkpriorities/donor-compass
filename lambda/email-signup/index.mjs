@@ -1,5 +1,7 @@
 // AWS Lambda handler for email signup API
 
+import crypto from 'node:crypto';
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 function generateShortId(length = 7) {
@@ -40,6 +42,48 @@ function jsonResponse(statusCode, data) {
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function subscribeToMailchimp(email) {
+  const apiKey = process.env.MAILCHIMP_API_KEY;
+  const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
+  const audienceId = process.env.MAILCHIMP_AUDIENCE_ID;
+
+  if (!apiKey || !serverPrefix || !audienceId) {
+    console.log('Mailchimp env vars missing — skipping subscription');
+    return;
+  }
+
+  const subscriberHash = crypto
+    .createHash('md5')
+    .update(email.toLowerCase())
+    .digest('hex');
+
+  const url = `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}`;
+  const auth = Buffer.from(`anystring:${apiKey}`).toString('base64');
+
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email_address: email,
+        status_if_new: 'pending',
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Mailchimp subscribe failed:', response.status, text);
+    } else {
+      console.log('Mailchimp subscribe ok for', email);
+    }
+  } catch (error) {
+    console.error('Mailchimp subscribe error:', error);
+  }
 }
 
 export const handler = async (event) => {
@@ -92,6 +136,9 @@ export const handler = async (event) => {
     }
 
     console.log('Email signup saved:', { id, email: email.trim() });
+
+    await subscribeToMailchimp(email.trim());
+
     return jsonResponse(201, { success: true, id });
   } catch (error) {
     console.error('Function error:', error);

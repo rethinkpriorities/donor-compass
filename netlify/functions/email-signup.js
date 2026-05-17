@@ -95,6 +95,7 @@ exports.handler = async function (event) {
     }
 
     console.log('Email signup saved:', { id, email: email.trim() });
+    console.log('Mailchimp local dev: skipping subscription');
 
     return jsonResponse(201, { success: true, id });
   } catch (error) {
