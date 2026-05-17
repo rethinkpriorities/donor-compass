@@ -452,6 +452,8 @@ A modal popup on the simple results screen that prompts users for their email af
 
 **Local dev path:** Frontend calls `submitEmailSignup` (`src/utils/emailSignup.js`); if `VITE_EMAIL_SIGNUP_API_URL` is unset, the call logs to console and resolves as a no-op success so the UI flow can be tested via `npm run dev` without `netlify dev`.
 
+**Mailchimp:** After a successful DB write, the Lambda fires a `PUT /lists/{audience_id}/members/{md5(email)}` to Mailchimp with `status_if_new: "pending"` (double opt-in — Mailchimp sends the confirmation email). Failures are swallowed and logged; the user always sees 201 once the DB write succeeds. Local dev (`netlify/functions/email-signup.js`) skips Mailchimp entirely. Env vars on `quiz-demo-email-signup`: `MAILCHIMP_API_KEY`, `MAILCHIMP_SERVER_PREFIX` (currently `us10`), `MAILCHIMP_AUDIENCE_ID`. Source of truth for the key is 1Password item "Donor Compass Mailchimp API Key" (field `credential`). To rotate: regenerate in Mailchimp → update 1Password → `aws lambda update-function-configuration` with the new value (preserve other env vars).
+
 **Production deployment status:** Deployed. Function URL: `https://vwiiaqw66ive3eehxjdg7bz35m0isawr.lambda-url.us-east-1.on.aws/`. Created manually via `aws lambda create-function` (same pattern as donate/export — SAM stack additions fail on EarlyValidation). Migration 003 has been applied to Turso prod. `VITE_EMAIL_SIGNUP_API_URL` is set in GitHub repo secrets. Toggle `ui.emailCapture` in `config/features.json` to control visibility per environment.
 
 **Redeploying code changes** (function already exists):
