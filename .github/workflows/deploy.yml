@@ -30,6 +30,7 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_DONATE_API_URL: ${{ secrets.VITE_DONATE_API_URL }}
           VITE_EXPORT_API_URL: ${{ secrets.VITE_EXPORT_API_URL }}
+          VITE_EMAIL_SIGNUP_API_URL: ${{ secrets.VITE_EMAIL_SIGNUP_API_URL }}
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/index.html dist/404.html
       - name: Copy prototypes to dist
