@@ -1627,3 +1627,109 @@ export function computeMultiStageAllocation(
 
   return { allocations, funding: cumulativeFunding, stageResults, debugTrace };
 }
+
+/**
+ * Compute allocation by running each method independently on the full budget,
+ * then taking a credence-weighted average of the per-method dollar allocations.
+ *
+ * Alternative to computeMultiStageAllocation: avoids ordering effects and
+ * cross-method DR compounding. Each method sees the entire pot, so its
+ * diminishing-returns curve is applied over the whole budget independently;
+ * the final per-fund dollar amount is the weight-sum of each method's
+ * recommended dollar amount.
+ *
+ * Same arg shape as computeMultiStageAllocation: `stage.budget` is treated as
+ * the un-normalised weight, weights are normalised internally, and
+ * totalBudget = sum(stage.budget) (capped at $1B, matching the sequential
+ * version's hard ceiling).
+ *
+ * @returns {{
+ *   allocations: Object,   // % of total funded
+ *   funding:     Object,   // $M per project
+ *   stageResults: Array,   // [{ funding }] — weight * method's full-budget funding
+ *   perMethod:   Object,   // { method -> { allocations, funding, normWeight } }
+ *   debugTrace:  Array,
+ * }}
+ */
+export function computeWeightedAllocation(
+  projectData,
+  worldviews,
+  stages,
+  incrementSize,
+  drOverrides,
+  drStepSize = 10
+) {
+  let cleanData = {};
+  for (const [id, project] of Object.entries(projectData)) {
+    const { name, color, ...data } = project;
+    cleanData[id] = data;
+  }
+  cleanData = applyDrOverrides(cleanData, drOverrides);
+
+  const fundIds = Object.keys(cleanData);
+  const emptyFunding = () => Object.fromEntries(fundIds.map((id) => [id, 0]));
+
+  const totalWeight = stages.reduce((s, st) => s + (st.budget || 0), 0);
+  if (totalWeight <= 0) {
+    return {
+      allocations: emptyFunding(),
+      funding: emptyFunding(),
+      stageResults: [],
+      perMethod: {},
+      debugTrace: [],
+    };
+  }
+
+  const totalBudget = Math.min(totalWeight, 1000);
+  const finalFunding = emptyFunding();
+  const stageResults = [];
+  const perMethod = {};
+  const debugTrace = [];
+
+  for (const stage of stages) {
+    const votingMethod = METHOD_MAP[stage.method];
+    if (!votingMethod) {
+      throw new Error(`Unknown voting method: ${stage.method}`);
+    }
+    const weight = (stage.budget || 0) / totalWeight;
+
+    if (weight <= 0) {
+      stageResults.push({ funding: emptyFunding() });
+      continue;
+    }
+
+    const { funding: methodFunding } = allocateBudget(cleanData, votingMethod, totalBudget, {
+      incrementSize,
+      customWorldviews: worldviews,
+      debugTrace,
+      debugMethod: stage.method,
+      drStepSize,
+      ...(stage.options || {}),
+    });
+
+    const stageContribution = {};
+    const methodAllocPct = {};
+    const methodTotal = Object.values(methodFunding).reduce((s, v) => s + v, 0);
+    for (const fid of fundIds) {
+      const amt = methodFunding[fid] ?? 0;
+      stageContribution[fid] = weight * amt;
+      finalFunding[fid] += stageContribution[fid];
+      methodAllocPct[fid] = methodTotal > 0 ? (amt / methodTotal) * 100 : 0;
+    }
+
+    stageResults.push({ funding: stageContribution });
+    perMethod[stage.method] = {
+      allocations: methodAllocPct,
+      funding: methodFunding,
+      normWeight: weight,
+    };
+  }
+
+  const totalFunded = Object.values(finalFunding).reduce((s, v) => s + v, 0);
+  const allocations = {};
+  for (const [projectId, amount] of Object.entries(finalFunding)) {
+    allocations[projectId] = totalFunded > 0 ? (amount / totalFunded) * 100 : 0;
+  }
+
+  return { allocations, funding: finalFunding, stageResults, perMethod, debugTrace };
+}

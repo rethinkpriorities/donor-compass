@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { computeMultiStageAllocation } from '../utils/marcusCalculation';
+import { computeMultiStageAllocation, computeWeightedAllocation } from '../utils/marcusCalculation';
 import { adjustCredences, roundCredences } from '../utils/calculations';
 import { useDataset } from '../context/DatasetContext';
 import { useQuiz } from '../context/useQuiz';
@@ -79,10 +79,16 @@ function loadSavedState() {
     const parsed = JSON.parse(stored);
     // Accept both version 6 (old format) and 7 (new format)
     if (parsed.version !== STATE_VERSION && parsed.version !== 6) return null;
-    const { worldviews, credences, lockedKeys } = parsed.state;
+    const { worldviews, credences, lockedKeys, aggregationMode } = parsed.state;
     if (!Array.isArray(worldviews) || !worldviews.length) return null;
     const stages = migrateToStages(parsed.state);
-    return { worldviews, credences, lockedKeys, stages };
+    return {
+      worldviews,
+      credences,
+      lockedKeys,
+      stages,
+      aggregationMode: aggregationMode === 'weighted' ? 'weighted' : 'sequential',
+    };
   } catch {
     return null;
   }
@@ -118,6 +124,7 @@ function loadHandoff() {
       credences: parsed.credences || { 0: 100 },
       lockedKeys: [],
       stages: null, // use default stage
+      aggregationMode: 'sequential',
     };
   } catch {
     return null;
@@ -157,6 +164,10 @@ export function useTableState() {
   const [stages, setStages] = useState(() => {
     const saved = getInitialState();
     return saved?.stages ?? [createDefaultStage()];
+  });
+  const [aggregationMode, setAggregationMode] = useState(() => {
+    const saved = getInitialState();
+    return saved?.aggregationMode ?? 'sequential';
   });
 
   // Note: calculations recompute automatically when dataset changes
@@ -224,38 +235,44 @@ export function useTableState() {
     );
   }, []);
 
-  // Debounce worldviews + credences + stages together for calculation
+  // Debounce worldviews + credences + stages + aggregationMode for calculation
   const [debouncedState, setDebouncedState] = useState({
     worldviews,
     credences,
     stages,
+    aggregationMode,
   });
   const debounceRef = useRef(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setDebouncedState({ worldviews, credences, stages });
+      setDebouncedState({ worldviews, credences, stages, aggregationMode });
     }, 150);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [worldviews, credences, stages]);
+  }, [worldviews, credences, stages, aggregationMode]);
 
   // Persist to sessionStorage on changes (300ms debounce)
   const saveRef = useRef(null);
   useEffect(() => {
     if (saveRef.current) clearTimeout(saveRef.current);
     saveRef.current = setTimeout(() => {
-      saveState({ worldviews, credences, lockedKeys, stages });
+      saveState({ worldviews, credences, lockedKeys, stages, aggregationMode });
     }, 300);
     return () => {
       if (saveRef.current) clearTimeout(saveRef.current);
     };
-  }, [worldviews, credences, lockedKeys, stages]);
+  }, [worldviews, credences, lockedKeys, stages, aggregationMode]);
 
   const results = useMemo(() => {
-    const { worldviews: wvs, credences: creds, stages: stgs } = debouncedState;
+    const {
+      worldviews: wvs,
+      credences: creds,
+      stages: stgs,
+      aggregationMode: mode,
+    } = debouncedState;
     if (!wvs.length || isHydrating) {
       const empty = {};
       for (const id of Object.keys(dataset.projects)) empty[id] = 0;
@@ -276,7 +293,9 @@ export function useTableState() {
           ? stgs.map((s) => ({ ...s, options: { ...s.options, fundingCaps } }))
           : stgs;
 
-      const result = computeMultiStageAllocation(
+      const computeFn =
+        mode === 'weighted' ? computeWeightedAllocation : computeMultiStageAllocation;
+      const result = computeFn(
         dataset.projects,
         worldviewsWithCredences,
         stagesWithCaps,
@@ -285,7 +304,7 @@ export function useTableState() {
         dataset.drStepSize || 10
       );
       console.log(
-        '[table] recalc stages',
+        `[table] recalc stages (${mode})`,
         stgs.map((s) => s.method),
         {
           credences: Object.fromEntries(
@@ -433,10 +452,14 @@ export function useTableState() {
       ];
     }
 
+    // Missing field on old share links → default to sequential to preserve their numbers.
+    const newMode = shareData.aggregationMode === 'weighted' ? 'weighted' : 'sequential';
+
     // Apply state updates
     if (shareData.worldviews) setWorldviews(shareData.worldviews);
     if (shareData.credences) setCredences(shareData.credences);
     if (newStages) setStages(newStages);
+    setAggregationMode(newMode);
     setLockedKeys([]);
 
     // Flush debounced state immediately so the first render uses hydrated values
@@ -445,6 +468,7 @@ export function useTableState() {
       worldviews: shareData.worldviews ?? prev.worldviews,
       credences: shareData.credences ?? prev.credences,
       stages: newStages ?? prev.stages,
+      aggregationMode: newMode,
     }));
   }, []);
 
@@ -454,6 +478,8 @@ export function useTableState() {
     lockedKeys,
     setLockedKeys,
     stages,
+    aggregationMode,
+    setAggregationMode,
     results,
     addWorldview,
     removeWorldview,

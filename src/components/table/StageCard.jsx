@@ -7,11 +7,13 @@ function StageCard({
   stage,
   index,
   canRemove,
+  aggregationMode = 'sequential',
   onMethodChange,
   onBudgetChange,
   onOptionChange,
   onRemove,
 }) {
+  const noun = aggregationMode === 'weighted' ? 'Method' : 'Stage';
   const [editing, setEditing] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(stage.budget));
   const displayValue = editing ? budgetInput : String(stage.budget);
@@ -61,11 +63,11 @@ function StageCard({
     <div className={styles.stageCard}>
       {canRemove && (
         <div className={styles.stageHeader}>
-          <span className={styles.stageNumber}>Stage {index + 1}</span>
+          <span className={styles.stageNumber}>{`${noun} ${index + 1}`}</span>
           <button
             className={styles.stageRemoveButton}
             onClick={() => onRemove(index)}
-            title="Remove stage"
+            title={`Remove ${noun.toLowerCase()}`}
           >
             ×
           </button>

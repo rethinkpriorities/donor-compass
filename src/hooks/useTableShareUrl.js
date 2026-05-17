@@ -15,6 +15,7 @@ export function useTableShareUrl({
   worldviews,
   credences,
   stages,
+  aggregationMode,
   fundingCaps,
   drOverrides,
   datasetId,
@@ -32,6 +33,7 @@ export function useTableShareUrl({
         worldviews,
         credences,
         stages,
+        aggregationMode,
         fundingCaps,
         drOverrides,
         datasetId,
@@ -47,7 +49,7 @@ export function useTableShareUrl({
     } finally {
       setLoading(false);
     }
-  }, [worldviews, credences, stages, fundingCaps, drOverrides, datasetId]);
+  }, [worldviews, credences, stages, aggregationMode, fundingCaps, drOverrides, datasetId]);
 
   return { copied, loading, error, handleShare };
 }

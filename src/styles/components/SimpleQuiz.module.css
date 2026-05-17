@@ -2,9 +2,38 @@
 
 /* === Question Screen === */
 
+/* Self-contained replacement for .screen-main on the question screen.
+   We don't use .screen-main here because we need the questionContainer to
+   stretch vertically (so the heading anchors to the top and the nav row to the
+   bottom via margin-top: auto), and the global .screen-main centers its child.
+   The heading therefore sits at the same distance from the progress bar on
+   every question, regardless of body length. */
+.questionMain {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: var(--spacing-32) var(--spacing-32);
+}
+
 .questionContainer {
   max-width: 44rem;
   width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wraps the answer area (options / sliders / manual input) + the More Options
+   panel. Grows to fill the space between the heading and the nav row, and
+   vertically centers its content — so short bodies (Q3 single slider, Q4 two
+   credence rows) don't sit jammed against the heading. Long bodies (Q1/Q2
+   four large option cards) overflow naturally and behave as before. */
+.questionBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Credence questions use a wider container to fit the two-column preset/slider layout. */
@@ -25,6 +54,18 @@
   line-height: var(--leading-snug);
   margin-bottom: var(--spacing-16);
   letter-spacing: var(--tracking-tight);
+}
+
+.questionHeadingTight {
+  margin-bottom: var(--spacing-8);
+}
+
+.questionSubheading {
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  color: var(--text-gray);
+  margin-bottom: var(--spacing-12);
+  font-family: var(--font-body);
 }
 
 .optionsGrid {
@@ -445,7 +486,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--spacing-12);
+  /* The .questionBody wrapper above grows to fill the available space, so
+     the nav row is naturally pushed to the bottom — padding gives a minimum
+     gap when the body is long enough to fully fill the wrapper. */
+  padding-top: var(--spacing-12);
 }
 
 .navBack {
@@ -476,14 +520,6 @@
   margin-bottom: var(--spacing-8);
   letter-spacing: var(--tracking-tight);
   text-align: center;
-}
-
-.resultsSubtext {
-  font-size: var(--text-base);
-  opacity: 0.7;
-  text-align: center;
-  margin-bottom: var(--spacing-16);
-  font-family: var(--font-body);
 }
 
 /* === Results Row (chart + explanation side by side) === */

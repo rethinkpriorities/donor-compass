@@ -5,6 +5,7 @@ import ResultCard from '../ui/ResultCard';
 import CompactSlider from '../ui/CompactSlider';
 import InfoTooltip from '../ui/InfoTooltip';
 import EditAnswersPanel from './EditAnswersPanel';
+import EmailCaptureModal from './EmailCaptureModal';
 import { useSimpleQuiz } from '../../context/useSimpleQuiz';
 import { useDataset } from '../../context/DatasetContext';
 import { adjustCredences } from '../../utils/calculations';
@@ -72,6 +73,8 @@ function SimpleResultsScreen() {
     setUserCredencesRaw,
     lockedKeys,
     setLockedKeys,
+    emailNagDismissed,
+    dismissEmailNag,
   } = useSimpleQuiz();
   const { dataset } = useDataset();
 
@@ -80,7 +83,12 @@ function SimpleResultsScreen() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const editInputRef = useRef(null);
 
-  const [budgetInput, setBudgetInput] = useState(String(budget));
+  const showEmailCapture = Boolean(features.ui?.emailCapture) && !emailNagDismissed;
+  const handleCloseEmailCapture = () => dismissEmailNag();
+
+  const [budgetInput, setBudgetInput] = useState(
+    Math.round(budget * 1_000_000).toLocaleString('en-US')
+  );
 
   // Derive credences: if keys match raw state, use it; otherwise equal split.
   const userCredences = useMemo(() => {
@@ -249,23 +257,24 @@ function SimpleResultsScreen() {
   const methodKey = 'credenceWeighted';
 
   const handleBudgetChange = (e) => {
-    const raw = e.target.value;
+    const raw = e.target.value.replace(/,/g, '');
     if (raw === '') {
       setBudgetInput('');
       return;
     }
     if (!/^\d*$/.test(raw)) return;
-    const cleaned = raw.replace(/^0+/, '') || '';
+    const cleaned = raw.replace(/^0+/, '') || '0';
     const val = Number(cleaned);
-    if (val >= 0 && val <= 1000) {
-      setBudgetInput(cleaned);
-      if (val > 0) setBudget(val);
+    if (val >= 0 && val <= 1_000_000_000) {
+      setBudgetInput(val.toLocaleString('en-US'));
+      if (val > 0) setBudget(val / 1_000_000);
     }
   };
 
   const handleBudgetBlur = () => {
-    if (!budgetInput || Number(budgetInput) <= 0) {
-      setBudgetInput(String(budget));
+    const numeric = Number(budgetInput.replace(/,/g, ''));
+    if (!budgetInput || numeric <= 0) {
+      setBudgetInput(Math.round(budget * 1_000_000).toLocaleString('en-US'));
     }
   };
 
@@ -449,13 +458,6 @@ function SimpleResultsScreen() {
       <main className="screen-main">
         <div className={styles.resultsContainer}>
           <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
-          <p className={styles.resultsSubtext}>
-            {blendEnabled
-              ? 'Your worldviews are blended with RP\u2019s expert views to produce a combined allocation.'
-              : hasSaved
-                ? 'Your worldviews are combined using credence-weighted allocation.'
-                : 'Based on your preferences, here\u2019s how your budget would be allocated across funds.'}
-          </p>
 
           <div className={styles.backRow}>
             <button className={styles.navBack} onClick={goBack}>
@@ -480,8 +482,8 @@ function SimpleResultsScreen() {
                     onBlur={handleBudgetBlur}
                     onKeyDown={handleBudgetKeyDown}
                     className={resultStyles.budgetInput}
+                    style={{ width: 130 }}
                   />
-                  <span className={resultStyles.budgetUnit}>M</span>
                 </div>
               </label>
               <div className={styles.resultsCardCell}>
@@ -683,6 +685,18 @@ function SimpleResultsScreen() {
       </main>
 
       {networkBlocked && <NetworkBlockedModal onDismiss={dismissNetworkBlocked} context="share" />}
+      {showEmailCapture && (
+        <EmailCaptureModal
+          quizState={{
+            selections,
+            manualOverrides,
+            credences,
+            selectedPresets,
+            budget,
+          }}
+          onClose={handleCloseEmailCapture}
+        />
+      )}
     </div>
   );
 }

@@ -178,6 +178,7 @@ Two copies of each function (kept in sync):
 - `netlify/functions/explain.js` / `lambda/explain/index.mjs` — AI Explanation API
 - `netlify/functions/donate.js` / `lambda/donate/index.mjs` — Donation Intent API
 - `netlify/functions/export.js` / `lambda/export/index.mjs` — Data Export API
+- `netlify/functions/email-signup.js` / `lambda/email-signup/index.mjs` — Email Signup API
 
 ### Deploying the Lambdas
 
@@ -227,6 +228,8 @@ Migrations are idempotent SQL files in `migrations/`. Uses `CREATE TABLE IF NOT 
 
 **Current migrations:**
 - `001_initial_schema.sql` - Creates `shares` table
+- `002_donations.sql` - Creates `donations` table
+- `003_email_signups.sql` - Creates `email_signups` table
 
 ---
 
@@ -274,7 +277,8 @@ Summary of implemented features. See `docs/CLAUDE-ARCHIVE.md` for detailed imple
 | Simple Quiz | `ui.simpleQuiz` | Simplified 4-question quiz with direct worldview mapping and bar chart results. **Defaults to ON.** See below. |
 | Support RP Footer | `ui.supportFooter` | Fixed footer on all screens with RP donation link. |
 | Donation Page | N/A (hash route) | Donation intent form at `#donate`. Config-driven copy, Lambda backend. See below. |
-| Data Export | `ui.exportPage` | Admin page at `#export` to download donations + shares as a zipped CSV pair, filtered by date range. API key auth. See below. |
+| Data Export | `ui.exportPage` | Admin page at `#export` to download donations + shares + email signups as a zipped CSV bundle, filtered by date range. API key auth. See below. |
+| Email Capture | `ui.emailCapture` | Modal popup on results screen prompting for email; saves to DB, exposed via export. See below. |
 
 ### Simple Quiz
 
@@ -431,6 +435,50 @@ aws lambda update-function-configuration \
 | `netlify/functions/export.js` | Local dev mirror against `dev.db` |
 | `src/components/export/ExportPage.jsx` | Form UI (API key, date pickers, download button) |
 | `src/styles/components/ExportPage.module.css` | Styling (matches dark teal theme) |
+
+### Email Capture
+
+**Flag:** `ui.emailCapture` (default: `false`)
+
+A modal popup on the simple results screen that prompts users for their email after they finish the quiz. Strongly worded but skippable. Saves to the `email_signups` Turso table along with a JSON snapshot of the user's quiz state (`selections`, `manualOverrides`, `credences`, `selectedPresets`, `budget`). Carmen / RP team consumes the data via the `#export` page; another RP team handles email outreach via Mailchimp.
+
+**Behavior:**
+- Renders as an overlay on `SimpleResultsScreen` if `ui.emailCapture` is true AND `state.emailNagDismissed` (in `SimpleQuizContext`) is false.
+- "Skip" or successful submit dispatches `DISMISS_EMAIL_NAG`, which persists in `sessionStorage` like the rest of the quiz state — same lifecycle: survives reload + back-nav, clears on tab close / new tab / Start Over.
+- `RESTORE_FROM_URL` does not carry the flag, so share-link recipients see the popup on their first visit. Share-link revisits in the same tab preserve any existing dismissal (the `...state` spread in the reducer keeps it).
+- Only `^[^\s@]+@[^\s@]+\.[^\s@]+$` regex validation on the client and Lambda. Real validation is downstream in Mailchimp.
+
+**Copy:** All strings in `config/copy.json` → `emailCapture` block. Carmen/RP edit copy without touching React code.
+
+**Local dev path:** Frontend calls `submitEmailSignup` (`src/utils/emailSignup.js`); if `VITE_EMAIL_SIGNUP_API_URL` is unset, the call logs to console and resolves as a no-op success so the UI flow can be tested via `npm run dev` without `netlify dev`.
+
+**Mailchimp:** After a successful DB write, the Lambda fires a `PUT /lists/{audience_id}/members/{md5(email)}` to Mailchimp with `status_if_new: "pending"` (double opt-in — Mailchimp sends the confirmation email). Failures are swallowed and logged; the user always sees 201 once the DB write succeeds. Local dev (`netlify/functions/email-signup.js`) skips Mailchimp entirely. Env vars on `quiz-demo-email-signup`: `MAILCHIMP_API_KEY`, `MAILCHIMP_SERVER_PREFIX` (currently `us10`), `MAILCHIMP_AUDIENCE_ID`. Source of truth for the key is 1Password item "Donor Compass Mailchimp API Key" (field `credential`). To rotate: regenerate in Mailchimp → update 1Password → `aws lambda update-function-configuration` with the new value (preserve other env vars).
+
+**Production deployment status:** Deployed. Function URL: `https://vwiiaqw66ive3eehxjdg7bz35m0isawr.lambda-url.us-east-1.on.aws/`. Created manually via `aws lambda create-function` (same pattern as donate/export — SAM stack additions fail on EarlyValidation). Migration 003 has been applied to Turso prod. `VITE_EMAIL_SIGNUP_API_URL` is set in GitHub repo secrets. Toggle `ui.emailCapture` in `config/features.json` to control visibility per environment.
+
+**Redeploying code changes** (function already exists):
+```bash
+cd lambda/email-signup && npm ci && cd ..
+sam build
+cd .aws-sam/build/EmailSignupFunction
+zip -r /tmp/lambda-email-signup.zip .
+aws lambda update-function-code \
+  --function-name quiz-demo-email-signup \
+  --zip-file fileb:///tmp/lambda-email-signup.zip
+```
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `config/copy.json` → `emailCapture` | All popup copy (title, body, labels, validation messages, success state) |
+| `migrations/003_email_signups.sql` | Creates `email_signups` table + indexes |
+| `lambda/email-signup/index.mjs` | AWS Lambda handler (validate, INSERT) |
+| `lambda/email-signup/package.json` | Lambda package manifest (`@libsql/client`) |
+| `netlify/functions/email-signup.js` | Local dev mirror against `dev.db` |
+| `src/components/simple/EmailCaptureModal.jsx` | Modal component |
+| `src/styles/components/EmailCaptureModal.module.css` | Styling |
+| `src/utils/emailSignup.js` | localStorage helpers + submit function (no-op in local dev) |
 
 ### Key Architecture Notes
 - **State management**: React Context in `src/context/QuizContext.jsx`

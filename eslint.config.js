@@ -23,6 +23,7 @@ export default [
         console: 'readonly',
         fetch: 'readonly',
         sessionStorage: 'readonly',
+        localStorage: 'readonly',
         crypto: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',

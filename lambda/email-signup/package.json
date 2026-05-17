@@ -1,0 +1,10 @@
+{
+  "name": "quiz-email-signup-lambda",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Email signup API for Donor Compass",
+  "main": "index.mjs",
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  }
+}

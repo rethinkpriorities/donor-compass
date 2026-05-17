@@ -4,7 +4,7 @@
       "id": "animal_weights",
       "title": "Animal Moral Weights",
       "heading": "How much should animal welfare factor into funding decisions?",
-      "info": "Moral weights determine how much you value improvements to different types of beings. Human life-years are the baseline (1.0). Your answer here affects how the model scores funds that focus on animal welfare.",
+      "info": "Funds have different types of effects. For example, some focus on saving or improving the lives of humans, while others try to reduce animal suffering. In order to compare their cost-effectiveness, we need to decide on moral weights: how much value you place on these different types of effects relative to each other.",
       "icon": "paw",
       "previewText": "Animal welfare weights",
       "worldviewField": "moral_weights",
@@ -43,7 +43,7 @@
         },
         {
           "id": "rp_default",
-          "label": "Animals matter, but less than humans",
+          "label": "Animals matter, but somewhat less than humans",
           "shortLabel": "Moderate animal weight",
           "description": "Animal welfare is given meaningful consideration though not weighted equally with human welfare.",
           "isDefault": true,
@@ -81,7 +81,7 @@
     {
       "id": "discount_factors",
       "title": "Time Discounting",
-      "heading": "How much should future benefits and harms count compared to those happening now?",
+      "heading": "How much value do you place on effects in the far future relative to those occurring sooner?",
       "info": "You might have reasons to discount effects that happen in the future. For example, the further out an effect is, the greater the chance that something intervenes and the estimated effect never occurs.\n\nThe model divides effects into six time periods: 0\u20135 years, 5\u201310 years, 10\u201320 years, 20\u2013100 years, 100\u2013500 years, and 500+ years. Each option sets a multiplier for each period. A multiplier of 0 means effects in that period are ignored entirely; 1 means they count fully.",
       "icon": "hourglass",
       "previewText": "Time horizon preferences",
@@ -96,18 +96,18 @@
         },
         {
           "id": "next_100_years",
-          "label": "Mid-term only",
-          "shortLabel": "Mid-term only",
-          "description": "Only the next century matters, with more weight on the near term. Effects beyond 100 years are ignored.",
-          "value": [1.0, 0.9, 0.8, 0.6, 0.0, 0.0]
+          "label": "Near and midterm only",
+          "shortLabel": "Near & midterm",
+          "description": "The further out an effect is, the less weight it gets. Effects more than 100 years out are ignored.",
+          "value": [1.0, 0.95, 0.9, 0.5, 0.0, 0.0]
         },
         {
           "id": "rp_default",
-          "label": "All time periods matter, near term gets more weight",
-          "shortLabel": "Near-term focus",
-          "description": "Near-term effects count fully. Effects further out are progressively discounted, with distant effects counting very little.",
+          "label": "All time periods matter, but long term gets little weight",
+          "shortLabel": "Long term discounted",
+          "description": "Effects in the near term get the most weight. Effects 100 years out and beyond get little weight.",
           "isDefault": true,
-          "value": [1.0, 0.9, 0.8, 0.1, 0.001, 0.00001]
+          "value": [1.0, 0.95, 0.9, 0.5, 0.001, 0.00001]
         },
         {
           "id": "all_equal",
@@ -122,8 +122,10 @@
     },
     {
       "id": "p_extinction",
+      "presentation": "slider-only",
       "title": "Non-AI X-Risk Discount",
       "heading": "How much priority should reducing existential risk from AI receive over other causes?",
+      "subheading": "If you think AI poses serious existential risks, other interventions may look less valuable since their benefits could be cut short. Use the slider to apply a discount that reflects how strongly you hold this view.",
       "info": "This adjustment applies only to interventions that do not focus on reducing existential risk from AI. Global health and development, animal welfare, biosecurity, and nuclear risk interventions are reduced in value. The value is a discount fraction: 0.0 means no discount, 0.4 means a 40% discount, 1.0 means that all non-AI interventions score zero.",
       "icon": "alert-triangle",
       "previewText": "Non-AI x-risk discount",
@@ -166,86 +168,26 @@
       "id": "risk_profile",
       "type": "credence",
       "title": "Risk Attitude",
-      "heading": "How do you want to handle uncertainty and risk when comparing funds?",
-      "info": "Each fund's impact is estimated as an expected value (an average across a range of possible scenarios, weighted by how likely each one is). Your choices here adjust how those scenarios are weighted. For example, you can give lower scores to funds based on very unlikely positive outcomes or to funds that risk doing harm. You can split your view across several buckets to assign weight to different views.",
+      "heading": "How do you want to split your donations across the following buckets?",
+      "info": "Some funds have near-certain outcomes, others aim for outcomes that have a large positive impact but occur with a small probability. If you are fully risk-neutral, we calculate the fund's impact as its expected value (an average across a range of possible scenarios, weighted by how likely each one is). However, if you are averse to doing harm or betting on outcomes with very low probability, we adjust the weights for harmful or unlikely outcomes to reflect that preference in the fund's score.",
       "icon": "dice",
       "previewText": "Risk profile",
       "worldviewField": "risk_profile",
       "options": [
         {
           "id": "neutral",
-          "label": "Risk neutral",
-          "shortLabel": "Neutral",
-          "description": "Takes expected value estimates at face value. A 10% chance of saving 1,000 lives scores the same as 100% chance of saving 100 lives. No extra adjustment for uncertainty or risk.",
+          "label": "I want to spend on whatever pays off most on average, even if the chance of success is small and the work may do harm",
+          "shortLabel": "Risk neutral",
+          "description": "Evaluate funds using a standard expected value. This is risk-neutral, so when calculating a fund's score, any negative effects can be offset by positive effects of equal probability and scale. A fund that has only a 1% probability of success still looks good if the effect is large enough.",
           "value": 0
         },
         {
-          "id": "upside_skeptical",
-          "label": "Skeptical of very large claimed benefits",
-          "shortLabel": "Upside skeptical",
-          "description": "Very unlikely best-case scenarios count for less. Gives lower scores to funds based on their least likely positive outcomes.",
-          "value": 4
-        },
-        {
-          "id": "downside_critical",
-          "label": "Put extra weight on avoiding harms",
-          "shortLabel": "Downside averse",
-          "description": "Possible harmful outcomes count for more. Gives lower scores to funds based on possible harmful outcomes.",
-          "value": 5
-        },
-        {
-          "id": "wlu_moderate",
-          "label": "Sceptical of large claimed benefits and averse to possible harms",
+          "id": "combined",
+          "label": "I want to optimize for impact under the condition that I avoid doing harm or taking bets on very unlikely outcomes",
           "shortLabel": "Combined",
-          "description": "Gives lower scores to funds both based on very unlikely positive outcomes and for possible harms.",
-          "value": 2
-        }
-      ],
-      "presets": [
-        {
-          "id": "moderately_cautious",
-          "name": "Moderately cautious",
-          "description": "Scores are mostly based on a mix of cautious views, though the largest single view is risk neutral.",
-          "credences": {
-            "neutral": 40,
-            "wlu_moderate": 15,
-            "upside_skeptical": 22,
-            "downside_critical": 23
-          }
-        },
-        {
-          "id": "moderately_neutral",
-          "name": "Moderately risk neutral",
-          "description": "Scores are mostly based on being risk neutral, but with significant weight given to cautious views.",
-          "credences": {
-            "neutral": 60,
-            "wlu_moderate": 15,
-            "upside_skeptical": 13,
-            "downside_critical": 12
-          }
-        },
-        {
-          "id": "strongly_neutral",
-          "name": "Strongly risk neutral",
-          "description": "Scores are heavily based on risk neutral expected value, with only a small degree of caution.",
-          "credences": {
-            "neutral": 80,
-            "wlu_moderate": 10,
-            "upside_skeptical": 5,
-            "downside_critical": 5
-          }
-        },
-        {
-          "id": "strongly_cautious",
-          "name": "Strongly cautious",
-          "description": "Scores are heavily based on caution both about speculative best case scenarios and possible harms, with a small amount of weight given to other views.",
+          "description": "Evaluate funds based on an adjusted version of the expected value, where harmful outcomes count 5x more than positive ones, and the top 1% of outcomes are reduced in weight.",
           "isDefault": true,
-          "credences": {
-            "neutral": 10,
-            "wlu_moderate": 80,
-            "upside_skeptical": 5,
-            "downside_critical": 5
-          }
+          "value": 6
         }
       ],
       "moreOptions": []

@@ -32,6 +32,8 @@ function TableModeScreen() {
     lockedKeys,
     setLockedKeys,
     stages,
+    aggregationMode,
+    setAggregationMode,
     results,
     addWorldview,
     removeWorldview,
@@ -110,6 +112,7 @@ function TableModeScreen() {
     worldviews,
     credences,
     stages,
+    aggregationMode,
     fundingCaps,
     drOverrides,
     datasetId: dataset.id,
@@ -159,6 +162,7 @@ function TableModeScreen() {
         <div className={styles.resultsSide}>
           <ResultsPanel
             stages={stages}
+            aggregationMode={aggregationMode}
             onStageMethodChange={(i, value) => updateStage(i, 'method', value)}
             onStageBudgetChange={(i, value) => updateStage(i, 'budget', value)}
             onStageOptionChange={updateStageOption}
@@ -186,7 +190,13 @@ function TableModeScreen() {
           </div>
         </div>
       </div>
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          aggregationMode={aggregationMode}
+          onAggregationModeChange={setAggregationMode}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

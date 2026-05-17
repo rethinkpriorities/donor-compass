@@ -220,6 +220,51 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: '*'
 
+  EmailSignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: quiz-demo-email-signup
+      CodeUri: email-signup/
+      Handler: index.handler
+      Runtime: nodejs22.x
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          TURSO_DATABASE_URL: !Ref TursoDatabaseUrl
+          TURSO_AUTH_TOKEN: !Ref TursoAuthToken
+
+  EmailSignupFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt EmailSignupFunction.Arn
+      Cors:
+        AllowOrigins:
+          - 'https://donorcompass.rethinkpriorities.org'
+          - 'https://donorcompass.netlify.app'
+          - 'https://rethinkpriorities.github.io'
+        AllowMethods:
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+
+  EmailSignupFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EmailSignupFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  EmailSignupFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EmailSignupFunction
+      Action: lambda:InvokeFunction
+      Principal: '*'
+
 Outputs:
   ShareFunctionUrl:
     Description: Function URL for the Share API
@@ -245,3 +290,9 @@ Outputs:
   ExportFunctionArn:
     Description: ARN of the Export function
     Value: !GetAtt ExportFunction.Arn
+  EmailSignupFunctionUrl:
+    Description: Function URL for the Email Signup API
+    Value: !GetAtt EmailSignupFunctionUrl.FunctionUrl
+  EmailSignupFunctionArn:
+    Description: ARN of the Email Signup function
+    Value: !GetAtt EmailSignupFunction.Arn

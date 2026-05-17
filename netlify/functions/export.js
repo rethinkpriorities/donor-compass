@@ -1,7 +1,7 @@
 /* global exports, process */
 
 const ROW_LIMIT = 10000;
-const TABLES = ['donations', 'shares'];
+const TABLES = ['donations', 'shares', 'email_signups'];
 
 async function getDbClient() {
   const url = process.env.TURSO_DATABASE_URL;

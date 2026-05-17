@@ -89,11 +89,12 @@ function ManualInput({ type, question, selectedValue, override, onSet, dataset, 
 
   if (type === 'p_extinction') {
     const pct = Math.round(value * 100);
+    const isPrimary = question.presentation === 'slider-only';
     if (compact) {
       return (
         <div className={`${styles.manualSection} ${isActive ? styles.manualActive : ''} ${c}`}>
           <div className={styles.manualSliderRow}>
-            <span className={styles.manualSliderRowLabel}>Custom</span>
+            <span className={styles.manualSliderRowLabel}>{isPrimary ? 'Discount' : 'Custom'}</span>
             <span className={styles.manualSliderRowValue}>{pct}%</span>
             <input
               type="range"
@@ -115,8 +116,16 @@ function ManualInput({ type, question, selectedValue, override, onSet, dataset, 
       <div className={`${styles.manualSection} ${isActive ? styles.manualActive : ''}`}>
         <div className={styles.manualHeader}>
           <span className={styles.manualTitle}>
-            Custom Value{' '}
-            <span className={styles.manualTitleSubtext}>(discount on non-AI interventions)</span>
+            {isPrimary ? (
+              'Discount on non-AI interventions'
+            ) : (
+              <>
+                Custom Value{' '}
+                <span className={styles.manualTitleSubtext}>
+                  (discount on non-AI interventions)
+                </span>
+              </>
+            )}
           </span>
         </div>
         <div className={styles.manualSliderValue}>{pct}%</div>

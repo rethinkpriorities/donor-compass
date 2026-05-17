@@ -125,16 +125,23 @@ function EditAnswerItem({
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isCredence = question.type === 'credence';
+  const isSliderOnly = question.presentation === 'slider-only';
   const hasManualOverride = manualOverride != null;
   const allOptions = [...question.options, ...(question.moreOptions || [])];
   const currentOption = selectedId ? allOptions.find((opt) => opt.id === selectedId) : null;
+  const defaultOption = question.options?.find((o) => o.isDefault);
+  const sliderDefaultValue = isSliderOnly ? (defaultOption?.value ?? null) : null;
 
   // Label shown on the collapsed header row.
   // - Credence question on a named preset: show preset name.
   // - Credence question on custom / no preset: "Mixed (a/b/c)" or single-option label.
+  // - Slider-only question: percentage discount.
   // - Non-credence question: the selected option's short/long label, or "Custom" for manual override.
   let currentLabel;
-  if (hasManualOverride) {
+  if (isSliderOnly) {
+    const v = manualOverride ?? defaultOption?.value ?? 0;
+    currentLabel = `${Math.round(v * 100)}% discount`;
+  } else if (hasManualOverride) {
     currentLabel = 'Custom';
   } else if (isCredence) {
     const activePreset = question.presets?.find((p) => p.id === selectedPresetId);
@@ -152,7 +159,8 @@ function EditAnswerItem({
   const selectedOption = selectedId ? allOptions.find((opt) => opt.id === selectedId) : null;
   const selectedValue = selectedOption?.value ?? null;
 
-  const hasMoreSection = question.moreOptions?.length > 0 || question.manualInputType;
+  const hasMoreSection =
+    !isSliderOnly && (question.moreOptions?.length > 0 || question.manualInputType);
 
   const lockedKeysArr = lockedKeys || [];
   const { thumbValues, animateTo } = useCredenceAnimation();
@@ -193,7 +201,17 @@ function EditAnswerItem({
 
       {isExpanded && (
         <div className={styles.editAnswerBody}>
-          {isCredence ? (
+          {isSliderOnly ? (
+            <ManualInput
+              type={question.manualInputType}
+              question={question}
+              selectedValue={sliderDefaultValue}
+              override={manualOverride}
+              onSet={onSetManualOverride}
+              dataset={dataset}
+              compact
+            />
+          ) : isCredence ? (
             <>
               {question.presets?.length > 0 && (
                 <div className={styles.editPresetsRow}>

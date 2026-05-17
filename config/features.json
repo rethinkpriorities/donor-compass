@@ -18,7 +18,8 @@
     "simpleQuiz": true,
     "supportFooter": false,
     "fundClusters": true,
-    "exportPage": true
+    "exportPage": true,
+    "emailCapture": true
   },
 
   "calculations": {

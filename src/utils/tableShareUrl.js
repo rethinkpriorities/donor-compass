@@ -37,6 +37,9 @@ export async function generateTableShareUrl(state) {
     worldviews: state.worldviews,
     credences: state.credences,
     stages: state.stages,
+    // Always emit aggregationMode so the link is self-describing. Old links
+    // without this field decode to 'sequential' in parseTableShareUrl.
+    aggregationMode: state.aggregationMode === 'weighted' ? 'weighted' : 'sequential',
     ...(state.fundingCaps &&
       Object.keys(state.fundingCaps).length > 0 && { fundingCaps: state.fundingCaps }),
     ...(state.drOverrides &&
@@ -89,6 +92,9 @@ export async function parseTableShareUrl() {
     const result = {
       worldviews: data.worldviews,
       credences: data.credences,
+      // Default to 'sequential' for share links generated before the field existed,
+      // so they reproduce the exact numbers their authors saw.
+      aggregationMode: data.aggregationMode === 'weighted' ? 'weighted' : 'sequential',
     };
 
     if (data.stages) {

@@ -15,6 +15,7 @@ const MAX_TOTAL_BUDGET = 1000;
 
 function ResultsPanel({
   stages,
+  aggregationMode = 'sequential',
   onStageMethodChange,
   onStageBudgetChange,
   onStageOptionChange,
@@ -22,6 +23,7 @@ function ResultsPanel({
   onRemoveStage,
   results,
 }) {
+  const isWeighted = aggregationMode === 'weighted';
   const [showModal, setShowModal] = useState(false);
   const { dataset } = useDataset();
   const { fundingCaps } = useQuiz();
@@ -62,13 +64,14 @@ function ResultsPanel({
         <div key={stage.id}>
           {index > 0 && (
             <div className={styles.stageConnector}>
-              <div className={styles.stageArrow} />
+              {!isWeighted && <div className={styles.stageArrow} />}
             </div>
           )}
           <StageCard
             stage={stage}
             index={index}
             canRemove={stages.length > 1}
+            aggregationMode={aggregationMode}
             onMethodChange={(i, value) => onStageMethodChange(i, value)}
             onBudgetChange={(i, value) => onStageBudgetChange(i, value)}
             onOptionChange={(i, optKey, value) => onStageOptionChange(i, optKey, value)}
@@ -80,10 +83,10 @@ function ResultsPanel({
       {canAddStage && (
         <>
           <div className={styles.stageConnector}>
-            <div className={styles.stageArrow} />
+            {!isWeighted && <div className={styles.stageArrow} />}
           </div>
           <button className={styles.addStageButton} onClick={onAddStage}>
-            + Add Stage
+            {isWeighted ? '+ Add Method' : '+ Add Stage'}
           </button>
         </>
       )}
@@ -93,7 +96,7 @@ function ResultsPanel({
       </div>
 
       <div className={styles.stageConnector}>
-        <div className={styles.stageArrow} />
+        {!isWeighted && <div className={styles.stageArrow} />}
       </div>
 
       <div className={styles.resultsCard} onClick={() => setShowModal(true)}>

@@ -2,14 +2,13 @@ import { useCallback } from 'react';
 import { Lock, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useSliderDrag } from '../../hooks/useSliderDrag';
 import { useLockedSlider } from '../../hooks/useLockedSlider';
 import { useDataset } from '../../context/DatasetContext';
 import PreciseNumberInput from '../ui/PreciseNumberInput';
 import tableConfig from '../../../config/tableMode.json';
 import styles from '../../styles/components/TableMode.module.css';
 
-function CredenceSlider({
+function CredenceInput({
   index,
   credences,
   lockedKeys,
@@ -20,25 +19,18 @@ function CredenceSlider({
   const sliderKey = String(index);
   const value = credences[sliderKey] ?? 0;
 
-  const { isLocked, hasLockedSibling, thumbOffset, canLockMore, featureEnabled } = useLockedSlider({
+  const { isLocked, canLockMore, featureEnabled } = useLockedSlider({
     sliderKey,
     lockedKeys,
     credences,
   });
 
   const handleChange = useCallback(
-    (val, baseCredences, shouldRound, currentLockedKeys) => {
-      onCredenceChange(sliderKey, val, baseCredences, shouldRound, currentLockedKeys);
+    (val) => {
+      onCredenceChange(sliderKey, val, null, false, lockedKeys);
     },
-    [sliderKey, onCredenceChange]
+    [sliderKey, lockedKeys, onCredenceChange]
   );
-
-  const { isDragging, dragHandlers } = useSliderDrag({
-    credences,
-    isLocked,
-    lockedKeys,
-    onChange: handleChange,
-  });
 
   const handleLockClick = () => {
     if (isLocked) {
@@ -48,33 +40,18 @@ function CredenceSlider({
     }
   };
 
-  const sliderBackground = hasLockedSibling
-    ? `linear-gradient(to right, var(--text-gray-medium) 0%, var(--text-gray-medium) ${value}%, rgba(255,255,255,0.15) ${value}%, rgba(255,255,255,0.15) ${thumbOffset}, rgba(255,255,255,0.06) ${thumbOffset}, rgba(255,255,255,0.06) 100%)`
-    : `linear-gradient(to right, var(--text-gray-medium) 0%, var(--text-gray-medium) ${value}%, rgba(255,255,255,0.1) ${value}%, rgba(255,255,255,0.1) 100%)`;
-
   return (
     <div className={styles.credenceCell}>
-      <div className={styles.credenceSliderTrack}>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="any"
-          value={value}
-          {...dragHandlers}
-          {...cellProps}
-          data-dragging={isDragging}
-          disabled={isLocked}
-          style={{
-            background: sliderBackground,
-            cursor: isLocked ? 'not-allowed' : 'pointer',
-          }}
-        />
-        {hasLockedSibling && (
-          <div className={styles.credenceLockLimit} style={{ left: thumbOffset }} />
-        )}
-      </div>
-      <span className={styles.credenceValue}>{Math.round(value)}%</span>
+      <PreciseNumberInput
+        className={styles.cellInput}
+        value={value}
+        min="0"
+        max="100"
+        onChange={handleChange}
+        disabled={isLocked}
+        {...cellProps}
+      />
+      <span className={styles.cellSuffix}>%</span>
       {featureEnabled && (
         <button
           className={`${styles.credenceLockButton} ${isLocked ? styles.locked : ''} ${!isLocked && !canLockMore ? styles.lockDisabled : ''}`}
@@ -180,7 +157,7 @@ function WorldviewColumn({
 
     if (field === 'credence') {
       return (
-        <CredenceSlider
+        <CredenceInput
           index={index}
           credences={credences}
           lockedKeys={lockedKeys}

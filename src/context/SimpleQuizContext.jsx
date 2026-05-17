@@ -69,6 +69,7 @@ const initialState = {
   userCredencesRaw: {}, // per-run credence sliders
   lockedKeys: [], // locked credence slider keys (run-level)
   questionLockedKeys: {}, // { [qId]: string[] } — locked option keys per credence question
+  emailNagDismissed: false, // popup state — persisted via sessionStorage, not carried in share URLs
 };
 
 /**
@@ -189,6 +190,8 @@ function reducer(state, action) {
       return { ...state, currentStep: action.step };
     case 'SET_BUDGET':
       return { ...state, budget: action.budget };
+    case 'DISMISS_EMAIL_NAG':
+      return { ...state, emailNagDismissed: true };
     case 'SAVE_WORLDVIEW':
       return {
         ...state,
@@ -527,6 +530,10 @@ export function SimpleQuizProvider({ children }) {
   const budget = state.budget;
   const setBudget = useCallback((val) => dispatch({ type: 'SET_BUDGET', budget: val }), []);
 
+  // --- Email nag ---
+  const emailNagDismissed = state.emailNagDismissed;
+  const dismissEmailNag = useCallback(() => dispatch({ type: 'DISMISS_EMAIL_NAG' }), []);
+
   // --- Results display preferences ---
   const activeView = state.activeView;
   const setActiveView = useCallback(
@@ -726,6 +733,9 @@ export function SimpleQuizProvider({ children }) {
       allocations,
       budget,
       setBudget,
+      // Email nag
+      emailNagDismissed,
+      dismissEmailNag,
       // Navigation
       startQuiz,
       goToStep,
@@ -791,6 +801,8 @@ export function SimpleQuizProvider({ children }) {
       questionLockedKeys,
       setQuestionLockedKeys,
       setBudget,
+      emailNagDismissed,
+      dismissEmailNag,
       startQuiz,
       goToStep,
       goForward,

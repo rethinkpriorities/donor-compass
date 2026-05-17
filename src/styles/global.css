@@ -296,6 +296,14 @@ input[type='range']::-moz-range-thumb {
   gap: var(--spacing-3);
 }
 
+.btn:disabled,
+.btn:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
 .btn-primary {
   background: #ffffff;
   color: var(--color-teal-dark);

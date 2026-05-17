@@ -4,7 +4,7 @@ import { useDataset } from '../../context/DatasetContext';
 import { useQuiz } from '../../context/useQuiz';
 import styles from '../../styles/components/SettingsModal.module.css';
 
-function SettingsModal({ onClose }) {
+function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
   const { dataset, datasets, setActiveDataset } = useDataset();
   const { fundingCaps, setFundingCaps, drOverrides, setDrOverrides } = useQuiz();
 
@@ -96,6 +96,34 @@ function SettingsModal({ onClose }) {
               </button>
             ))}
           </div>
+
+          {aggregationMode && onAggregationModeChange && (
+            <div className={styles.capsSection}>
+              <h3 className={styles.sectionTitle}>Aggregation</h3>
+              <div className={styles.datasetList}>
+                <button
+                  className={`${styles.datasetCard} ${aggregationMode === 'sequential' ? styles.active : ''}`}
+                  onClick={() => onAggregationModeChange('sequential')}
+                >
+                  <span className={styles.datasetName}>Sequential</span>
+                  <span className={styles.datasetDescription}>
+                    Each method picks up where the previous left off. Diminishing returns compound
+                    across the full pot, and stage order matters.
+                  </span>
+                </button>
+                <button
+                  className={`${styles.datasetCard} ${aggregationMode === 'weighted' ? styles.active : ''}`}
+                  onClick={() => onAggregationModeChange('weighted')}
+                >
+                  <span className={styles.datasetName}>Weighted average</span>
+                  <span className={styles.datasetDescription}>
+                    Each method runs independently on the full budget; final allocation is the
+                    credence-weighted average. Order-independent.
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className={styles.capsSection}>
             <h3 className={styles.sectionTitle}>Project Overrides</h3>
