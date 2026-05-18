@@ -250,6 +250,11 @@ input[type='range']::-moz-range-thumb {
   font-size: var(--text-3xl);
   font-weight: var(--font-bold);
   letter-spacing: 0.02em;
+  /* The RP SVG glyph sits a touch lower than the wordmark's optical baseline;
+     this nudge brings the two into alignment. Using transform rather than
+     `top` so the GPU compositing path handles sub-pixel offsets more
+     consistently across DPIs. */
+  transform: translateY(0.5px);
 }
 
 .header-subtitle {
