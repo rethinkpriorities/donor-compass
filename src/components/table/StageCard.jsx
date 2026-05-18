@@ -7,7 +7,7 @@ function StageCard({
   stage,
   index,
   canRemove,
-  aggregationMode = 'sequential',
+  aggregationMode = 'weighted',
   onMethodChange,
   onBudgetChange,
   onOptionChange,

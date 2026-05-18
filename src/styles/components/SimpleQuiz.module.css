@@ -2,6 +2,24 @@
 
 /* === Question Screen === */
 
+/* Constrains the header (and optional progress bar) to the same
+   horizontal width as .questionContainer so the logo, subtitle, and
+   progress bar align with the question content edges. Used by both
+   the welcome screen and the question screen. */
+.constrainedTopBar {
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 769px) {
+  .constrainedTopBar :global(.header),
+  .constrainedTopBar :global(.progress-container) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 /* Self-contained replacement for .screen-main on the question screen.
    We don't use .screen-main here because we need the questionContainer to
    stretch vertically (so the heading anchors to the top and the nav row to the
@@ -11,9 +29,9 @@
 .questionMain {
   flex: 1;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--spacing-32) var(--spacing-32);
+  padding: var(--spacing-12) var(--spacing-32) var(--spacing-32);
 }
 
 .questionContainer {
@@ -25,12 +43,11 @@
 }
 
 /* Wraps the answer area (options / sliders / manual input) + the More Options
-   panel. Grows to fill the space between the heading and the nav row, and
-   vertically centers its content — so short bodies (Q3 single slider, Q4 two
-   credence rows) don't sit jammed against the heading. Long bodies (Q1/Q2
-   four large option cards) overflow naturally and behave as before. */
+   panel. A modest min-height gives short bodies (Q3/Q4) some breathing room
+   so they don't sit jammed against the heading. Content is centered within
+   that area. Long bodies (Q1/Q2) grow naturally beyond it. */
 .questionBody {
-  flex: 1;
+  min-height: 14rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -486,9 +503,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* The .questionBody wrapper above grows to fill the available space, so
-     the nav row is naturally pushed to the bottom — padding gives a minimum
-     gap when the body is long enough to fully fill the wrapper. */
   padding-top: var(--spacing-12);
 }
 
@@ -498,7 +512,7 @@
   cursor: pointer;
   background: none;
   border: none;
-  padding: var(--spacing-4) var(--spacing-8);
+  padding: var(--spacing-4) 0;
   transition: var(--transition-fast);
 }
 
@@ -508,8 +522,27 @@
 
 /* === Results Screen === */
 
+/* Constrains the header + page title to the same 44rem width as the
+   question screen's .constrainedTopBar, so the logo sits in roughly the
+   same horizontal position across both screens. Overrides .header's
+   default centered layout to left-justify the logo so it shares the
+   same left edge as the .resultsHeading below it. */
+.resultsTopBar {
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 769px) {
+  .resultsTopBar :global(.header) {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: flex-start;
+  }
+}
+
 .resultsContainer {
-  max-width: 50rem;
+  max-width: 44rem;
   width: 100%;
 }
 
@@ -519,13 +552,14 @@
   line-height: var(--leading-snug);
   margin-bottom: var(--spacing-8);
   letter-spacing: var(--tracking-tight);
-  text-align: center;
+  text-align: left;
 }
 
 /* === Results Row (chart + explanation side by side) === */
 
 .backRow {
-  margin-bottom: var(--spacing-4);
+  margin-top: var(--spacing-16);
+  margin-bottom: var(--spacing-8);
 }
 
 .budgetLabelRow {
@@ -536,9 +570,8 @@
 
 .resultsRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   grid-template-rows: auto auto;
-  column-gap: var(--spacing-10);
   row-gap: 0;
   align-items: start;
 }
@@ -562,27 +595,13 @@
   grid-row: 2;
 }
 
-.resultsExplanation {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
-  font-size: var(--text-base);
+.resultsExplanationTop {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-medium);
   font-family: var(--font-body);
   color: var(--text-secondary);
   line-height: var(--leading-relaxed);
-}
-
-.resultsExplanation p {
-  margin: 0 0 var(--spacing-6);
-}
-
-.resultsExplanation p:last-child {
-  margin-bottom: 0;
-}
-
-.resultsExplanationLead {
-  color: var(--text-tertiary);
-  font-weight: var(--font-medium);
+  margin: 0 0 var(--spacing-16);
 }
 
 /* === Controls Row (worldviews + blend side by side) === */
@@ -762,10 +781,14 @@
 
 .primaryCtas {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   gap: var(--spacing-6);
-  flex-wrap: wrap;
+}
+
+.primaryCtas :global(.btn) {
+  width: 20rem;
+  justify-content: center;
 }
 
 .ctaWithTooltip {
@@ -774,10 +797,21 @@
   gap: var(--spacing-2);
 }
 
+/* Invisible spacer mirroring the InfoTooltip's footprint on the right
+   (trigger margin-left 0.4rem + 14px icon), so the button visually
+   centers within the wrapper. Keeps the tooltip in normal flow so its
+   native hover behavior keeps working. */
+.ctaWithTooltip::before {
+  content: '';
+  width: calc(0.4rem + 14px);
+  flex-shrink: 0;
+}
+
 .advancedSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .advancedToggle {
@@ -807,10 +841,32 @@
 
 .advancedPanel {
   display: flex;
-  justify-content: center;
-  gap: var(--spacing-6);
-  flex-wrap: wrap;
-  animation: fadeIn 0.2s ease;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-8);
+  width: 100%;
+}
+
+.advancedCollapser {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  transition:
+    grid-template-rows 0.3s ease,
+    margin-top 0.3s ease,
+    opacity 0.25s ease;
+  opacity: 0;
+}
+
+.advancedCollapserOpen {
+  grid-template-rows: 1fr;
+  margin-top: var(--spacing-4);
+  opacity: 1;
+}
+
+.advancedCollapserInner {
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* === Edit Answers Panel === */
@@ -1038,7 +1094,7 @@
 /* === Welcome Screen === */
 
 .welcomeContainer {
-  max-width: 50rem;
+  max-width: 44rem;
   text-align: center;
 }
 
@@ -1075,7 +1131,7 @@
 
 .welcomeQuestionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-8);
   font-family: var(--font-body);
 }
@@ -1110,14 +1166,12 @@
   }
 
   .resultsRow {
-    grid-template-columns: 1fr;
     grid-template-rows: auto;
     row-gap: var(--spacing-6);
   }
 
   .resultsBudgetLabel,
-  .resultsCardCell,
-  .resultsExplanation {
+  .resultsCardCell {
     grid-column: 1;
     grid-row: auto;
   }

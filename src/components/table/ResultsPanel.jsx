@@ -15,7 +15,7 @@ const MAX_TOTAL_BUDGET = 1000;
 
 function ResultsPanel({
   stages,
-  aggregationMode = 'sequential',
+  aggregationMode = 'weighted',
   onStageMethodChange,
   onStageBudgetChange,
   onStageOptionChange,

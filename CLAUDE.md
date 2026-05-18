@@ -335,6 +335,8 @@ Each question has 4 main preset options (one marked `isDefault`) and a custom in
 
 ### Donation Page
 
+> **Currently dead code (2026-05-17).** The simple results screen's "Donate" button now opens the external RP DAF page (`https://daf.rethinkpriorities.org/community-funds/8tpqgn/rethink-priorities-cross-cause-fund`) in a new tab instead of routing to `#donate`. The internal donation page, its config, its Lambda, the Turso `donations` table, and the SES integration are all still wired up and deployable — they're just unreachable from the live UI. Keep them intact in case we revive the in-app donation intent flow later. To bring it back, restore the previous `handleDonate` body in `SimpleResultsScreen.jsx` (sessionStorage handoff + `window.location.hash = 'donate'`) and re-add the `DONATE_HANDOFF_KEY` constant.
+
 **Route:** `#donate` (hash-based, like `#table`)
 
 A donation intent form where donors provide their details, choose a fund split preference, and generate a transfer memo to paste into their DAF or bank transfer. Ported from a standalone HTML file (`donation_intent_form.html`) and restyled to match the quiz's dark teal theme.

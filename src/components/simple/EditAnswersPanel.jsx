@@ -40,6 +40,7 @@ function EditAnswersPanel({
   worldviewChoices,
   editViewUid,
   onChangeEditView,
+  alwaysOpen = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -47,6 +48,48 @@ function EditAnswersPanel({
   const toggleQuestion = (qId) => {
     setExpandedId((prev) => (prev === qId ? null : qId));
   };
+
+  const innerPanel = (
+    <div className={styles.editAnswersPanel}>
+      {worldviewChoices && (
+        <div className={styles.editViewSelector}>
+          <label className={styles.editViewSelectorLabel}>Editing:</label>
+          <select
+            className={styles.editViewSelectorSelect}
+            value={editViewUid}
+            onChange={(e) => onChangeEditView(e.target.value)}
+          >
+            {worldviewChoices.map((wv) => (
+              <option key={wv.uid} value={wv.uid}>
+                {wv.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {questions.map((question) => (
+        <EditAnswerItem
+          key={question.id}
+          question={question}
+          selectedId={selections[question.id]}
+          manualOverride={manualOverrides[question.id]}
+          credences={credences?.[question.id]}
+          lockedKeys={questionLockedKeys?.[question.id]}
+          selectedPresetId={selectedPresets?.[question.id]}
+          onSelectOption={(optionId) => onSelectOption(question.id, optionId)}
+          onSetManualOverride={(value) => onSetManualOverride(question.id, value)}
+          onSetCredences={(dist) => onSetCredences(question.id, dist)}
+          onSetLockedKeys={(keys) => onSetQuestionLockedKeys(question.id, keys)}
+          onSetSelectedPreset={(presetId) => onSetSelectedPreset(question.id, presetId)}
+          isExpanded={expandedId === question.id}
+          onToggle={() => toggleQuestion(question.id)}
+        />
+      ))}
+    </div>
+  );
+
+  if (alwaysOpen) return innerPanel;
 
   return (
     <div className={styles.editAnswersSection}>
@@ -62,45 +105,7 @@ function EditAnswersPanel({
         className={`${styles.editAnswersCollapser} ${isOpen ? styles.editAnswersCollapserOpen : ''}`}
         aria-hidden={!isOpen}
       >
-        <div className={styles.editAnswersCollapserInner}>
-          <div className={styles.editAnswersPanel}>
-            {worldviewChoices && (
-              <div className={styles.editViewSelector}>
-                <label className={styles.editViewSelectorLabel}>Editing:</label>
-                <select
-                  className={styles.editViewSelectorSelect}
-                  value={editViewUid}
-                  onChange={(e) => onChangeEditView(e.target.value)}
-                >
-                  {worldviewChoices.map((wv) => (
-                    <option key={wv.uid} value={wv.uid}>
-                      {wv.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {questions.map((question) => (
-              <EditAnswerItem
-                key={question.id}
-                question={question}
-                selectedId={selections[question.id]}
-                manualOverride={manualOverrides[question.id]}
-                credences={credences?.[question.id]}
-                lockedKeys={questionLockedKeys?.[question.id]}
-                selectedPresetId={selectedPresets?.[question.id]}
-                onSelectOption={(optionId) => onSelectOption(question.id, optionId)}
-                onSetManualOverride={(value) => onSetManualOverride(question.id, value)}
-                onSetCredences={(dist) => onSetCredences(question.id, dist)}
-                onSetLockedKeys={(keys) => onSetQuestionLockedKeys(question.id, keys)}
-                onSetSelectedPreset={(presetId) => onSetSelectedPreset(question.id, presetId)}
-                isExpanded={expandedId === question.id}
-                onToggle={() => toggleQuestion(question.id)}
-              />
-            ))}
-          </div>
-        </div>
+        <div className={styles.editAnswersCollapserInner}>{innerPanel}</div>
       </div>
     </div>
   );

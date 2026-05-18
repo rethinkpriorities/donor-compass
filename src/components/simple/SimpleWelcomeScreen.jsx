@@ -11,7 +11,9 @@ function SimpleWelcomeScreen() {
 
   return (
     <div className="screen">
-      <Header subtitle="~2 minutes" />
+      <div className={styles.constrainedTopBar}>
+        <Header subtitle="~2 minutes" />
+      </div>
 
       <main className="screen-main">
         <div className={styles.welcomeContainer}>

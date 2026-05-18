@@ -93,8 +93,10 @@ function SimpleQuizScreen() {
 
   return (
     <div className="screen">
-      <Header subtitle={`Question ${questionIndex + 1} of ${totalQuestions}`} />
-      <ProgressBar percentage={progressPercentage} />
+      <div className={styles.constrainedTopBar}>
+        <Header subtitle={`Question ${questionIndex + 1} of ${totalQuestions}`} />
+        <ProgressBar percentage={progressPercentage} />
+      </div>
 
       <main className={styles.questionMain}>
         <div
