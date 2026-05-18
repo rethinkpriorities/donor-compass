@@ -1,4 +1,4 @@
-import { Share2, Check, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import copy from '../../../config/copy.json';
 import styles from '../../styles/components/ShareButton.module.css';
 
@@ -25,7 +25,7 @@ function ShareButton({
   const getIcon = () => {
     if (loading) return <Loader2 size={16} className={styles.spinning} />;
     if (copied) return <Check size={16} />;
-    return <Share2 size={16} />;
+    return null;
   };
 
   const getText = () => {

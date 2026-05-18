@@ -286,6 +286,10 @@ function SimpleResultsScreen() {
     );
   };
 
+  const handleDonateRP = () => {
+    window.open('https://rethinkpriorities.org/donate/', '_blank', 'noopener,noreferrer');
+  };
+
   const startEditing = (id, name) => {
     setEditingId(id);
     setEditingName(name);
@@ -632,7 +636,11 @@ function SimpleResultsScreen() {
             </div>
 
             <div className={styles.primaryCtas}>
-              <button className="btn btn-primary btn-sm" onClick={handleDonate}>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleDonate}
+                style={{ whiteSpace: 'pre-line' }}
+              >
                 {copy.results.donateButton}
               </button>
               {features.ui?.shareResults && (
@@ -650,6 +658,12 @@ function SimpleResultsScreen() {
                 </button>
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
               </div>
+              <div className={styles.ctaWithTooltip}>
+                <button className="btn btn-primary btn-sm" onClick={handleDonateRP}>
+                  {copy.results.donateRpButton}
+                </button>
+                <InfoTooltip content={copy.results.donateRpDescription} />
+              </div>
             </div>
           </div>
 
@@ -660,7 +674,7 @@ function SimpleResultsScreen() {
           </div>
 
           <SupportFooter
-            lead={copy.results.supportLead}
+            lead={copy.results.methodologyLink}
             contact={copy.results.supportContact}
             inline
           />
