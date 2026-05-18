@@ -124,7 +124,7 @@ function loadHandoff() {
       credences: parsed.credences || { 0: 100 },
       lockedKeys: [],
       stages: null, // use default stage
-      aggregationMode: 'sequential',
+      aggregationMode: 'weighted',
     };
   } catch {
     return null;
@@ -167,7 +167,7 @@ export function useTableState() {
   });
   const [aggregationMode, setAggregationMode] = useState(() => {
     const saved = getInitialState();
-    return saved?.aggregationMode ?? 'sequential';
+    return saved?.aggregationMode ?? 'weighted';
   });
 
   // Note: calculations recompute automatically when dataset changes

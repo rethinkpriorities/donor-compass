@@ -28,8 +28,6 @@ import resultStyles from '../../styles/components/Results.module.css';
 import copy from '../../../config/copy.json';
 import donationConfig from '../../../config/donationPage.json';
 
-const DONATE_HANDOFF_KEY = 'donate_handoff';
-
 /**
  * Results screen showing allocation percentages via ResultCard.
  * Supports clicking between individual worldviews to compare results.
@@ -56,8 +54,6 @@ function SimpleResultsScreen() {
     removeWorldview,
     removeCurrent,
     renameWorldview,
-    goToAdvancedMode,
-    resetQuiz,
     goBack,
     updateSavedSelection,
     updateSavedManualOverride,
@@ -282,24 +278,16 @@ function SimpleResultsScreen() {
     if (e.key === 'Enter') e.target.blur();
   };
 
-  const handleStartOver = () => {
-    if (window.confirm('Are you sure? This will clear all your answers and start over.')) {
-      resetQuiz();
-    }
+  const handleDonate = () => {
+    window.open(
+      'https://daf.rethinkpriorities.org/community-funds/8tpqgn/rethink-priorities-cross-cause-fund',
+      '_blank',
+      'noopener,noreferrer'
+    );
   };
 
-  const handleDonate = () => {
-    if (!rawAllocations) return;
-    const handoff = { allocations: rawAllocations };
-    if (useClusters) {
-      handoff.clusteredAllocations = displayAllocations;
-      handoff.clusters = dataset.clusters.map((c) => ({
-        ...c,
-        memberNames: c.members.map((m) => dataset.projects[m]?.name || m),
-      }));
-    }
-    sessionStorage.setItem(DONATE_HANDOFF_KEY, JSON.stringify(handoff));
-    window.location.hash = 'donate';
+  const handleDonateRP = () => {
+    window.open('https://rethinkpriorities.org/donate/', '_blank', 'noopener,noreferrer');
   };
 
   const startEditing = (id, name) => {
@@ -453,39 +441,26 @@ function SimpleResultsScreen() {
 
   return (
     <div className="screen">
-      <Header />
+      <div className={styles.resultsTopBar}>
+        <Header />
+        <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
+        {copy.results.resultsExplanationLead && (
+          <div className={styles.resultsExplanationTop}>
+            {copy.results.resultsExplanationLead}
+            {copy.results.resultsExplanation && (
+              <>
+                {' '}
+                <InfoTooltip content={copy.results.resultsExplanation} />
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <main className="screen-main">
         <div className={styles.resultsContainer}>
-          <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
-
-          <div className={styles.backRow}>
-            <button className={styles.navBack} onClick={goBack}>
-              &larr; Back
-            </button>
-          </div>
-
           {displayAllocations && (
             <div className={styles.resultsRow}>
-              <label className={styles.resultsBudgetLabel}>
-                <span className={styles.budgetLabelRow}>
-                  {copy.results.budgetLabel}
-                  {copy.results.budgetInfo && <InfoTooltip content={copy.results.budgetInfo} />}
-                </span>
-                <div className={resultStyles.budgetInputWrapper}>
-                  <span className={resultStyles.currencyPrefix}>$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={budgetInput}
-                    onChange={handleBudgetChange}
-                    onBlur={handleBudgetBlur}
-                    onKeyDown={handleBudgetKeyDown}
-                    className={resultStyles.budgetInput}
-                    style={{ width: 130 }}
-                  />
-                </div>
-              </label>
               <div className={styles.resultsCardCell}>
                 <ResultCard
                   methodKey={methodKey}
@@ -494,19 +469,6 @@ function SimpleResultsScreen() {
                   simpleMode={true}
                 />
               </div>
-              {(copy.results.resultsExplanationLead || copy.results.resultsExplanation) && (
-                <div className={styles.resultsExplanation}>
-                  <p>
-                    {copy.results.resultsExplanationLead && (
-                      <span className={styles.resultsExplanationLead}>
-                        {copy.results.resultsExplanationLead}
-                      </span>
-                    )}
-                    {copy.results.resultsExplanationLead && copy.results.resultsExplanation && ' '}
-                    {copy.results.resultsExplanation}
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
@@ -612,24 +574,75 @@ function SimpleResultsScreen() {
             </div>
           </div>
 
-          <EditAnswersPanel
-            selections={editSelections}
-            manualOverrides={editManualOverrides}
-            credences={editCredences}
-            selectedPresets={editSelectedPresets}
-            questionLockedKeys={questionLockedKeys}
-            onSelectOption={handleEditSelect}
-            onSetManualOverride={handleEditManual}
-            onSetCredences={handleEditCredences}
-            onSetQuestionLockedKeys={setQuestionLockedKeys}
-            onSetSelectedPreset={handleEditSelectedPreset}
-            worldviewChoices={editWorldviewChoices}
-            editViewUid={effectiveEditView}
-            onChangeEditView={setEditViewUid}
-          />
-
           <div className={styles.resultsActions}>
+            <div className={styles.advancedSection}>
+              <button
+                className={styles.advancedToggle}
+                onClick={() => setAdvancedOpen(!advancedOpen)}
+              >
+                <ChevronRight
+                  size={14}
+                  className={`${styles.advancedToggleIcon} ${advancedOpen ? styles.advancedToggleIconOpen : ''}`}
+                />
+                {copy.results.advancedOptionsButton}
+              </button>
+              <div
+                className={`${styles.advancedCollapser} ${advancedOpen ? styles.advancedCollapserOpen : ''}`}
+                aria-hidden={!advancedOpen}
+              >
+                <div className={styles.advancedCollapserInner}>
+                  <div className={styles.advancedPanel}>
+                    <label className={styles.resultsBudgetLabel}>
+                      <span className={styles.budgetLabelRow}>
+                        {copy.results.budgetLabel}
+                        {copy.results.budgetInfo && (
+                          <InfoTooltip content={copy.results.budgetInfo} />
+                        )}
+                      </span>
+                      <div className={resultStyles.budgetInputWrapper}>
+                        <span className={resultStyles.currencyPrefix}>$</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={budgetInput}
+                          onChange={handleBudgetChange}
+                          onBlur={handleBudgetBlur}
+                          onKeyDown={handleBudgetKeyDown}
+                          className={resultStyles.budgetInput}
+                          style={{ width: 130 }}
+                        />
+                      </div>
+                    </label>
+
+                    <EditAnswersPanel
+                      selections={editSelections}
+                      manualOverrides={editManualOverrides}
+                      credences={editCredences}
+                      selectedPresets={editSelectedPresets}
+                      questionLockedKeys={questionLockedKeys}
+                      onSelectOption={handleEditSelect}
+                      onSetManualOverride={handleEditManual}
+                      onSetCredences={handleEditCredences}
+                      onSetQuestionLockedKeys={setQuestionLockedKeys}
+                      onSetSelectedPreset={handleEditSelectedPreset}
+                      worldviewChoices={editWorldviewChoices}
+                      editViewUid={effectiveEditView}
+                      onChangeEditView={setEditViewUid}
+                      alwaysOpen
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className={styles.primaryCtas}>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleDonate}
+                style={{ whiteSpace: 'pre-line' }}
+              >
+                {copy.results.donateButton}
+              </button>
               {features.ui?.shareResults && (
                 <ShareButton
                   loading={shareLoading}
@@ -646,40 +659,24 @@ function SimpleResultsScreen() {
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
               </div>
               <div className={styles.ctaWithTooltip}>
-                <button className="btn btn-primary btn-sm" onClick={handleDonate}>
-                  {copy.results.donateButton}
+                <button className="btn btn-primary btn-sm" onClick={handleDonateRP}>
+                  {copy.results.donateRpButton}
                 </button>
-                <InfoTooltip content={copy.results.donateDescription} />
+                <InfoTooltip content={copy.results.donateRpDescription} />
               </div>
-            </div>
-
-            <div className={styles.advancedSection}>
-              <button
-                className={styles.advancedToggle}
-                onClick={() => setAdvancedOpen(!advancedOpen)}
-              >
-                <ChevronRight
-                  size={14}
-                  className={`${styles.advancedToggleIcon} ${advancedOpen ? styles.advancedToggleIconOpen : ''}`}
-                />
-                {copy.results.advancedOptionsButton}
-              </button>
-              {advancedOpen && (
-                <div className={styles.advancedPanel}>
-                  <button className="btn btn-primary btn-sm" onClick={goToAdvancedMode}>
-                    {copy.results.advancedModeButton}
-                  </button>
-                  <button className="btn btn-primary btn-sm" onClick={handleStartOver}>
-                    {copy.results.startOverButton}
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
+          <div className={styles.backRow}>
+            <button className={styles.navBack} onClick={goBack}>
+              &larr; Back
+            </button>
+          </div>
+
           <SupportFooter
-            lead={donationConfig.pageFooterLead}
+            lead={copy.results.methodologyLink}
             contact={copy.results.supportContact}
+            inline
           />
         </div>
       </main>

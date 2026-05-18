@@ -1,8 +1,19 @@
 import { renderMarkdownLink } from '../../utils/renderMarkdownLink';
 import styles from '../../styles/components/SupportFooter.module.css';
 
-export default function SupportFooter({ lead, body, contact }) {
+export default function SupportFooter({ lead, body, contact, inline = false }) {
   if (!lead && !body && !contact) return null;
+  if (inline) {
+    return (
+      <div className={styles.footer}>
+        <p className={styles.paragraph}>
+          {lead && renderMarkdownLink(lead)}
+          {lead && contact && ' '}
+          {contact && renderMarkdownLink(contact)}
+        </p>
+      </div>
+    );
+  }
   return (
     <div className={styles.footer}>
       {(lead || body) && (
