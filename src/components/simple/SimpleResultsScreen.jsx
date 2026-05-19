@@ -19,7 +19,7 @@ import quizConfig from '../../../config/simpleQuizConfig.json';
 import { clusterAllocations, getClusterEntries } from '../../utils/fundClusters';
 import ShareButton from '../ui/ShareButton';
 import NetworkBlockedModal from '../ui/NetworkBlockedModal';
-import SupportFooter from '../ui/SupportFooter';
+import { renderMarkdownLink } from '../../utils/renderMarkdownLink';
 import { useSimpleShareUrl } from '../../hooks/useSimpleShareUrl';
 import specialBlendConfig from '../../../config/specialBlend.json';
 import features from '../../../config/features.json';
@@ -284,10 +284,6 @@ function SimpleResultsScreen() {
       '_blank',
       'noopener,noreferrer'
     );
-  };
-
-  const handleDonateRP = () => {
-    window.open('https://rethinkpriorities.org/donate/', '_blank', 'noopener,noreferrer');
   };
 
   const startEditing = (id, name) => {
@@ -635,34 +631,32 @@ function SimpleResultsScreen() {
               </div>
             </div>
 
-            <div className={styles.primaryCtas}>
+            <div className={styles.heroCtaCard}>
               <button
-                className="btn btn-primary btn-sm"
+                className={`btn btn-primary ${styles.heroCtaButton}`}
                 onClick={handleDonate}
                 style={{ whiteSpace: 'pre-line' }}
               >
                 {copy.results.donateButton}
               </button>
+              <p className={styles.heroCtaText}>{copy.results.donateExplanation}</p>
+            </div>
+
+            <div className={styles.secondaryCtas}>
               {features.ui?.shareResults && (
                 <ShareButton
                   loading={shareLoading}
                   copied={copied}
                   error={shareError}
                   onClick={handleShare}
-                  variant="btn-primary btn-sm"
+                  variant="btn-secondary btn-sm"
                 />
               )}
               <div className={styles.ctaWithTooltip}>
-                <button className="btn btn-primary btn-sm" onClick={saveAndRetake}>
+                <button className="btn btn-secondary btn-sm" onClick={saveAndRetake}>
                   {copy.results.saveAndRetakeButton}
                 </button>
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
-              </div>
-              <div className={styles.ctaWithTooltip}>
-                <button className="btn btn-primary btn-sm" onClick={handleDonateRP}>
-                  {copy.results.donateRpButton}
-                </button>
-                <InfoTooltip content={copy.results.donateRpDescription} />
               </div>
             </div>
           </div>
@@ -673,11 +667,15 @@ function SimpleResultsScreen() {
             </button>
           </div>
 
-          <SupportFooter
-            lead={copy.results.methodologyLink}
-            contact={copy.results.supportContact}
-            inline
-          />
+          <div className={styles.resultsFooter}>
+            <p className={styles.resultsFooterBody}>
+              {renderMarkdownLink(copy.results.supportBody)}
+            </p>
+            <p className={styles.resultsFooterMeta}>
+              {renderMarkdownLink(copy.results.methodologyLink)}{' '}
+              {renderMarkdownLink(copy.results.supportContact)}
+            </p>
+          </div>
         </div>
       </main>
 

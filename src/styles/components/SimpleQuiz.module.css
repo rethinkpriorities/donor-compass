@@ -562,6 +562,42 @@
   margin-bottom: var(--spacing-8);
 }
 
+.resultsFooter {
+  margin-top: var(--spacing-12);
+  padding-top: var(--spacing-8);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: var(--font-body);
+}
+
+.resultsFooterBody {
+  margin: 0 0 var(--spacing-4) 0;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+.resultsFooterBody a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  font-weight: var(--font-semibold);
+}
+
+.resultsFooterMeta {
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.resultsFooterMeta:last-child {
+  margin-bottom: 0;
+}
+
+.resultsFooterMeta a {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
 .budgetLabelRow {
   display: flex;
   align-items: center;
@@ -774,21 +810,43 @@
 .resultsActions {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--spacing-12);
   margin-top: var(--spacing-16);
 }
 
-.primaryCtas {
-  display: flex;
-  flex-direction: column;
+.heroCtaCard {
+  display: grid;
+  grid-template-columns: minmax(18rem, 22rem) 1fr;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: var(--spacing-16);
+  padding: var(--spacing-12) var(--spacing-16);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-2xl, 1.25rem);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
-.primaryCtas :global(.btn) {
-  width: 20rem;
+.heroCtaButton {
+  width: 100%;
   justify-content: center;
+  text-align: center;
+}
+
+.heroCtaText {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.secondaryCtas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-6) var(--spacing-8);
 }
 
 .ctaWithTooltip {
@@ -1156,7 +1214,18 @@
     grid-template-columns: 1fr;
   }
 
-  .primaryCtas {
+  .heroCtaCard {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-6);
+    padding: var(--spacing-8);
+    text-align: center;
+  }
+
+  .heroCtaText {
+    font-size: var(--text-base);
+  }
+
+  .secondaryCtas {
     flex-direction: column;
   }
 
