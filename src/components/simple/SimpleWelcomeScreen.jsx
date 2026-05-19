@@ -12,7 +12,7 @@ function SimpleWelcomeScreen() {
   return (
     <div className="screen">
       <div className={styles.constrainedTopBar}>
-        <Header subtitle="~2 minutes" />
+        <Header subtitle="~5 minutes" />
       </div>
 
       <main className="screen-main">
