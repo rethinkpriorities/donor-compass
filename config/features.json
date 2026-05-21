@@ -17,7 +17,7 @@
     "settingsModal": true,
     "simpleQuiz": true,
     "supportFooter": false,
-    "fundClusters": false,
+    "fundClusters": true,
     "exportPage": true,
     "emailCapture": true
   },
