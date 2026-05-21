@@ -130,6 +130,23 @@ function SimpleResultsScreen() {
     [dataset, useClusters]
   );
 
+  // For each cluster, list of [memberKey, {name, color}] so the result card
+  // can render expandable rows that reveal individual fund splits.
+  const clusterMembers = useMemo(() => {
+    if (!useClusters) return null;
+    const map = {};
+    for (const c of dataset.clusters) {
+      map[c.id] = c.members.map((memberKey) => [
+        memberKey,
+        {
+          name: dataset.projects[memberKey]?.name || memberKey,
+          color: dataset.projects[memberKey]?.color || c.color,
+        },
+      ]);
+    }
+    return map;
+  }, [useClusters, dataset]);
+
   // Expanded worldviews per run for the active view — used when the active view
   // is being shown alone (no blend, single saved/current run).
   const activeRunWorldviews = useMemo(() => {
@@ -436,7 +453,7 @@ function SimpleResultsScreen() {
   };
 
   return (
-    <div className="screen">
+    <div className={`screen ${styles.resultsScreen}`}>
       <div className={styles.resultsTopBar}>
         <Header />
         <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
@@ -453,7 +470,7 @@ function SimpleResultsScreen() {
         )}
       </div>
 
-      <main className="screen-main">
+      <main className={`screen-main ${styles.resultsMain}`}>
         <div className={styles.resultsContainer}>
           {displayAllocations && (
             <div className={styles.resultsRow}>
@@ -463,6 +480,8 @@ function SimpleResultsScreen() {
                   results={displayAllocations}
                   causeEntries={causeEntries}
                   simpleMode={true}
+                  clusterMembers={clusterMembers}
+                  memberAllocations={rawAllocations}
                 />
               </div>
             </div>
@@ -635,7 +654,7 @@ function SimpleResultsScreen() {
               <button
                 className={`btn btn-primary ${styles.heroCtaButton}`}
                 onClick={handleDonate}
-                style={{ whiteSpace: 'pre-line' }}
+                style={{ whiteSpace: 'pre' }}
               >
                 {copy.results.donateButton}
               </button>

@@ -185,7 +185,7 @@ Two copies of each function (kept in sync):
 The Lambda auto-deploy GitHub Action is disabled — deploy manually from CLI:
 
 ```bash
-cd lambda/share && npm install && cd ../explain && npm install && cd ..
+cd lambda/share && npm ci && cd ../explain && npm ci && cd ..
 sam build
 sam deploy \
   --stack-name quiz-demo-share \
@@ -355,7 +355,7 @@ A donation intent form where donors provide their details, choose a fund split p
 
 **Redeploying the Lambda** (same as share Lambda — SAM deploy fails, deploy directly):
 ```bash
-cd lambda/donate && npm install && cd ..
+cd lambda/donate && npm ci && cd ..
 sam build
 cd .aws-sam/build/DonateFunction
 zip -r /tmp/lambda-donate.zip .
@@ -408,7 +408,7 @@ Admin-only page for downloading raw rows from the `donations` and `shares` table
 
 **Redeploying code changes** (function already exists, same as share/donate):
 ```bash
-cd lambda/export && npm install && cd ..
+cd lambda/export && npm ci && cd ..
 sam build
 cd .aws-sam/build/ExportFunction
 zip -r /tmp/lambda-export.zip .
@@ -460,7 +460,7 @@ A modal popup on the simple results screen that prompts users for their email af
 
 **Redeploying code changes** (function already exists):
 ```bash
-cd lambda/email-signup && npm install && cd ..
+cd lambda/email-signup && npm ci && cd ..
 sam build
 cd .aws-sam/build/EmailSignupFunction
 zip -r /tmp/lambda-email-signup.zip .

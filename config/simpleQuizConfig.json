@@ -172,6 +172,10 @@
       "icon": "dice",
       "previewText": "Risk profile",
       "worldviewField": "risk_profile",
+      "defaultCredences": {
+        "neutral": 40,
+        "combined": 60
+      },
       "options": [
         {
           "id": "neutral",

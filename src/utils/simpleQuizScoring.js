@@ -69,7 +69,8 @@ function topCredenceOptionId(dist) {
 
 /**
  * Build the default credence distribution for a credence-type question.
- * Priority: default preset's credences → 100% on isDefault option → 100% on first option.
+ * Priority: default preset's credences → question.defaultCredences → 100% on
+ * isDefault option → 100% on first option.
  */
 export function defaultCredenceDistribution(question) {
   const dist = {};
@@ -80,6 +81,14 @@ export function defaultCredenceDistribution(question) {
   if (defaultPreset?.credences) {
     for (const opt of question.options) {
       dist[opt.id] = defaultPreset.credences[opt.id] || 0;
+    }
+    return dist;
+  }
+
+  // Explicit default split declared on the question
+  if (question.defaultCredences) {
+    for (const opt of question.options) {
+      dist[opt.id] = question.defaultCredences[opt.id] || 0;
     }
     return dist;
   }
