@@ -60,7 +60,7 @@
 
   "funds": [
     { "id": "givewell", "name": "GiveWell All Grants Fund", "sub": "Global health & development", "defaultPct": null },
-    { "id": "leaf", "name": "Lead Elimination Action Fund", "sub": "Global health & development", "defaultPct": null },
+    { "id": "leaf", "name": "Lead Exposure Action Fund", "sub": "Global health & development", "defaultPct": null },
     { "id": "ea_awf", "name": "Animal Welfare Fund", "sub": "Animal welfare", "defaultPct": null },
     { "id": "longview_ai", "name": "Longview Philanthropy's Frontier AI Fund", "sub": "AI risk", "defaultPct": null },
     { "id": "longview_nuclear", "name": "Longview Philanthropy's Nuclear Weapons Policy Fund", "sub": "Nuclear risk", "defaultPct": null },

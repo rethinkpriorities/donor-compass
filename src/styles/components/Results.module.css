@@ -241,6 +241,75 @@
   border-top: 2px solid var(--border-subtle);
 }
 
+/* === EXPANDABLE CLUSTER ROW (simpleMode) === */
+
+.clusterRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.clusterRowHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.clusterRowHeader:hover {
+  opacity: 0.85;
+}
+
+.clusterRowHeader:focus-visible {
+  outline: 1px solid var(--border-bright);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.clusterRowChevron {
+  flex-shrink: 0;
+  color: var(--text-gray-medium);
+  transition: transform 0.15s ease;
+  margin-top: 4px;
+}
+
+.clusterRowChevronOpen {
+  transform: rotate(90deg);
+}
+
+.clusterRowBar {
+  flex: 1;
+  min-width: 0;
+}
+
+.clusterRowMembers {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.2s ease;
+  opacity: 0;
+}
+
+.clusterRowMembersOpen {
+  grid-template-rows: 1fr;
+  opacity: 0.85;
+}
+
+.clusterRowMembersInner {
+  overflow: hidden;
+  padding-left: calc(14px + var(--spacing-2) + var(--spacing-10));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.clusterRowMembersOpen .clusterRowMembersInner {
+  padding-top: var(--spacing-2);
+  padding-bottom: var(--spacing-1);
+}
+
 /* Info/Explain button row between results and adjust panel */
 .infoButtonRow {
   display: flex;

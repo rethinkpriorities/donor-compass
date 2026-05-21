@@ -537,8 +537,17 @@
   .resultsTopBar :global(.header) {
     padding-left: 0;
     padding-right: 0;
+    padding-bottom: var(--spacing-10);
     justify-content: flex-start;
   }
+}
+
+/* Results-screen-only overrides to shrink vertical rhythm so the page fits
+   above the fixed support footer when funds are collapsed. */
+.resultsScreen :global(.screen-main),
+.resultsMain {
+  padding-top: var(--spacing-6);
+  padding-bottom: var(--spacing-10);
 }
 
 .resultsContainer {
@@ -550,7 +559,8 @@
   font-size: var(--text-heading);
   font-weight: var(--font-normal);
   line-height: var(--leading-snug);
-  margin-bottom: var(--spacing-8);
+  margin-top: 0;
+  margin-bottom: var(--spacing-6);
   letter-spacing: var(--tracking-tight);
   text-align: left;
 }
@@ -558,8 +568,44 @@
 /* === Results Row (chart + explanation side by side) === */
 
 .backRow {
-  margin-top: var(--spacing-16);
-  margin-bottom: var(--spacing-8);
+  margin-top: var(--spacing-8);
+  margin-bottom: var(--spacing-4);
+}
+
+.resultsFooter {
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: var(--font-body);
+}
+
+.resultsFooterBody {
+  margin: 0 0 var(--spacing-4) 0;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+.resultsFooterBody a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  font-weight: var(--font-semibold);
+}
+
+.resultsFooterMeta {
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.resultsFooterMeta:last-child {
+  margin-bottom: 0;
+}
+
+.resultsFooterMeta a {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .budgetLabelRow {
@@ -601,7 +647,7 @@
   font-family: var(--font-body);
   color: var(--text-secondary);
   line-height: var(--leading-relaxed);
-  margin: 0 0 var(--spacing-16);
+  margin: 0 0 var(--spacing-8);
 }
 
 /* === Controls Row (worldviews + blend side by side) === */
@@ -610,7 +656,7 @@
   display: flex;
   gap: var(--spacing-10);
   align-items: flex-start;
-  margin-top: var(--spacing-8);
+  margin-top: var(--spacing-10);
   margin-bottom: var(--spacing-4);
 }
 
@@ -774,21 +820,46 @@
 .resultsActions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-12);
-  margin-top: var(--spacing-16);
+  align-items: stretch;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-10);
 }
 
-.primaryCtas {
-  display: flex;
-  flex-direction: column;
+.heroCtaCard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: var(--spacing-10);
+  padding: var(--spacing-6) var(--spacing-10);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-2xl, 1.25rem);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
-.primaryCtas :global(.btn) {
-  width: 20rem;
+.heroCtaCard .heroCtaButton {
+  width: 100%;
   justify-content: center;
+  text-align: center;
+  padding: var(--spacing-4) var(--spacing-10);
+  font-size: var(--text-lg);
+  letter-spacing: 0.08em;
+}
+
+.heroCtaText {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.secondaryCtas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-6) var(--spacing-8);
 }
 
 .ctaWithTooltip {
@@ -1156,7 +1227,18 @@
     grid-template-columns: 1fr;
   }
 
-  .primaryCtas {
+  .heroCtaCard {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-6);
+    padding: var(--spacing-8);
+    text-align: center;
+  }
+
+  .heroCtaText {
+    font-size: var(--text-base);
+  }
+
+  .secondaryCtas {
     flex-direction: column;
   }
 
