@@ -200,7 +200,7 @@ input[type='range']::-moz-range-thumb {
   text-align: center;
   padding: var(--spacing-4) var(--spacing-8);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
