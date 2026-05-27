@@ -51,6 +51,7 @@ function SimpleResultsScreen() {
     currentRunName,
     setCurrentRunName,
     saveAndRetake,
+    goToAdvancedMode,
     removeWorldview,
     removeCurrent,
     renameWorldview,
@@ -677,6 +678,9 @@ function SimpleResultsScreen() {
                 </button>
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
               </div>
+              <button className="btn btn-secondary btn-sm" onClick={goToAdvancedMode}>
+                {copy.results.advancedModeButton}
+              </button>
             </div>
           </div>
 
