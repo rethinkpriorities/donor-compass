@@ -18,6 +18,7 @@ import {
   defaultPresetId,
 } from '../utils/simpleQuizScoring';
 import { detectShareUrl, parseShareUrl, clearShareHash } from '../utils/shareUrl';
+import { randomId } from '../utils/randomId';
 import quizConfig from '../../config/simpleQuizConfig.json';
 import specialBlendConfig from '../../config/specialBlend.json';
 import features from '../../config/features.json';
@@ -200,7 +201,7 @@ function reducer(state, action) {
           {
             worldview: action.worldview,
             name: action.name,
-            uid: crypto.randomUUID(),
+            uid: randomId(),
             selections: { ...state.selections },
             manualOverrides: { ...state.manualOverrides },
             credences: JSON.parse(JSON.stringify(state.credences)),
@@ -483,6 +484,19 @@ export function SimpleQuizProvider({ children }) {
     hydrate();
   }, []);
 
+  // Keep the document title in sync with the current step so screen readers
+  // announce route-like changes and tab titles reflect progress.
+  useEffect(() => {
+    const step = state.currentStep;
+    let title = 'Donor Compass — Where Should Your Giving Go?';
+    if (step === 'results') {
+      title = 'Results — Donor Compass';
+    } else if (typeof step === 'number') {
+      title = `Question ${step + 1} of ${totalQuestions} — Donor Compass`;
+    }
+    document.title = title;
+  }, [state.currentStep]);
+
   // Persist state changes (debounced). Don't save disclaimer/welcome steps.
   const saveRef = useRef(null);
   useEffect(() => {
@@ -495,9 +509,17 @@ export function SimpleQuizProvider({ children }) {
   }, [state]);
 
   // --- Navigation ---
-  const startQuiz = useCallback(() => dispatch({ type: 'GO_TO_STEP', step: 0 }), []);
+  const scrollToTop = () => window.scrollTo(0, 0);
 
-  const goToStep = useCallback((step) => dispatch({ type: 'GO_TO_STEP', step }), []);
+  const startQuiz = useCallback(() => {
+    dispatch({ type: 'GO_TO_STEP', step: 0 });
+    scrollToTop();
+  }, []);
+
+  const goToStep = useCallback((step) => {
+    dispatch({ type: 'GO_TO_STEP', step });
+    scrollToTop();
+  }, []);
 
   const goForward = useCallback(() => {
     const { currentStep } = state;
@@ -508,6 +530,7 @@ export function SimpleQuizProvider({ children }) {
     } else {
       dispatch({ type: 'GO_TO_STEP', step: 'results' });
     }
+    scrollToTop();
   }, [state]);
 
   const goBack = useCallback(() => {
@@ -519,6 +542,7 @@ export function SimpleQuizProvider({ children }) {
     } else {
       dispatch({ type: 'GO_TO_STEP', step: 'welcome' });
     }
+    scrollToTop();
   }, [state]);
 
   const resetQuiz = useCallback(() => {
@@ -663,6 +687,7 @@ export function SimpleQuizProvider({ children }) {
 
   const saveAndRetake = useCallback(() => {
     dispatch({ type: 'SAVE_WORLDVIEW', worldview, name: currentRunName });
+    scrollToTop();
   }, [worldview, currentRunName]);
 
   const setCurrentRunName = useCallback((name) => {

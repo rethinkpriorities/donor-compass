@@ -7,9 +7,16 @@ import styles from '../../styles/components/SessionConflictModal.module.css';
  */
 function SessionConflictModal({ onKeepMine, onLoadShared, onOpenNewTab }) {
   return (
-    <div className={styles.overlay}>
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="session-conflict-title"
+    >
       <div className={styles.modal}>
-        <h2 className={styles.title}>You have unsaved progress</h2>
+        <h2 id="session-conflict-title" className={styles.title}>
+          You have unsaved progress
+        </h2>
         <p className={styles.message}>
           Loading this shared link will replace your current quiz answers. What would you like to
           do?

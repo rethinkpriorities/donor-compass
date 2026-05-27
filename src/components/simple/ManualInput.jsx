@@ -103,6 +103,8 @@ function ManualInput({ type, question, selectedValue, override, onSet, dataset, 
               max="100"
               step="1"
               value={pct}
+              aria-label="Discount on non-AI interventions"
+              aria-valuetext={`${pct}%`}
               style={{
                 background: `linear-gradient(to right, #2a9ab5 0%, #2a9ab5 ${pct}%, rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`,
               }}
@@ -136,6 +138,8 @@ function ManualInput({ type, question, selectedValue, override, onSet, dataset, 
           max="100"
           step="1"
           value={pct}
+          aria-label="Discount on non-AI interventions"
+          aria-valuetext={`${pct}%`}
           style={{
             background: `linear-gradient(to right, #2a9ab5 0%, #2a9ab5 ${pct}%, rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`,
           }}

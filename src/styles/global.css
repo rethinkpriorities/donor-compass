@@ -32,6 +32,42 @@
   padding: 0;
 }
 
+/* Skip-to-main-content link for keyboard users. Hidden off-screen until it
+   receives focus (Tab on first page load), at which point it slides in. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0.75rem 1.25rem;
+  background: #ffffff;
+  color: #0c435f;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 0 0 0.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-110%);
+  transition: transform 0.18s ease;
+  z-index: 9999;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid #2a9ab5;
+  outline-offset: -2px;
+}
+
+/* Honor OS-level reduce-motion preference. Collapses animations and
+   transitions across the whole tree without having to touch each rule. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -413,6 +449,17 @@ input[type='range']::-moz-range-thumb {
 /* ===== RESPONSIVE ===== */
 
 @media (max-width: 768px) {
+  /* iOS Safari auto-zooms when a focused form control's font-size is under
+     16px. Bumping the floor on touch-sized viewports keeps the page locked
+     at 1x without disabling user pinch-zoom (which would violate WCAG 1.4.4).
+     !important is needed because CSS-module class selectors (e.g.
+     .manualFieldInput) otherwise outrank this tag-level rule. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
   .header,
   .screen-main,
   .progress-container {
@@ -439,12 +486,6 @@ input[type='range']::-moz-range-thumb {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-2);
-  }
-
-  .header-with-subtitle .header-brand {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-4);
   }
 
   .header-with-subtitle .header-title {

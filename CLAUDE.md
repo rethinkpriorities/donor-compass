@@ -146,7 +146,7 @@ All visual/UX design decisions are handled by the UX team, not implementation. M
 ## Hosting & Backend
 
 ### Hosting
-- **Frontend**: GitHub Pages at `https://rethinkpriorities.github.io/quiz-demo/`
+- **Frontend**: `https://donorcompass.rethinkpriorities.org` (custom domain on GitHub Pages; fallback URL `https://rethinkpriorities.github.io/donor-compass/`)
 - **Share API**: AWS Lambda Function URL (deployed via SAM CLI)
 - **Local dev**: Netlify dev (`netlify dev`) or Vite (`npm run dev`)
 
@@ -181,6 +181,8 @@ Two copies of each function (kept in sync):
 - `netlify/functions/email-signup.js` / `lambda/email-signup/index.mjs` — Email Signup API
 
 ### Deploying the Lambdas
+
+> **Naming note:** the AWS Lambdas and the CloudFormation stack are still named `quiz-demo-*` even though the repo is now `donor-compass`. Renaming them would mean redeploying, getting new Function URLs, and updating every `VITE_*_API_URL` GitHub secret. Not worth the churn — the names are internal and users never see them.
 
 The Lambda auto-deploy GitHub Action is disabled — deploy manually from CLI:
 

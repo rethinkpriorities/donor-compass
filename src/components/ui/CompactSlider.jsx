@@ -10,6 +10,7 @@ import copy from '../../../config/copy.json';
  */
 function CompactSlider({
   label,
+  ariaLabel,
   value,
   thumbValue,
   onChange,
@@ -72,6 +73,8 @@ function CompactSlider({
             max="100"
             step="any"
             value={displayedThumb}
+            aria-label={ariaLabel || label || undefined}
+            aria-valuetext={`${Math.round(value)}%`}
             {...dragHandlers}
             data-dragging={isDragging}
             disabled={isLocked}
@@ -86,6 +89,8 @@ function CompactSlider({
           <button
             className={`${styles.lockButton} ${isLocked ? styles.locked : ''} ${!isLocked && !canLockMore ? styles.lockDisabled : ''}`}
             onClick={handleLockClick}
+            aria-label={isLocked ? copy.sliders.unlockTooltip : copy.sliders.lockTooltip}
+            aria-pressed={isLocked}
             title={isLocked ? copy.sliders.unlockTooltip : copy.sliders.lockTooltip}
             type="button"
             disabled={!isLocked && !canLockMore}

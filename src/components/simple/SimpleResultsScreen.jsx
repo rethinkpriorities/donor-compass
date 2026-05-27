@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback, useDeferredValue } from 'react';
 import { ChevronRight } from 'lucide-react';
 import Header from '../layout/Header';
 import ResultCard from '../ui/ResultCard';
@@ -51,6 +51,7 @@ function SimpleResultsScreen() {
     currentRunName,
     setCurrentRunName,
     saveAndRetake,
+    goToAdvancedMode,
     removeWorldview,
     removeCurrent,
     renameWorldview,
@@ -78,6 +79,14 @@ function SimpleResultsScreen() {
   const [editingName, setEditingName] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const editInputRef = useRef(null);
+  const headingRef = useRef(null);
+
+  // Move focus to the results heading on mount so assistive tech announces
+  // the new screen. preventScroll avoids conflict with the navigation
+  // scroll-to-top.
+  useEffect(() => {
+    if (headingRef.current) headingRef.current.focus({ preventScroll: true });
+  }, []);
 
   const showEmailCapture = Boolean(features.ui?.emailCapture) && !emailNagDismissed;
   const handleCloseEmailCapture = () => dismissEmailNag();
@@ -195,6 +204,14 @@ function SimpleResultsScreen() {
     return allUserWorldviewKeys.map((k) => userCredences[k] || 0);
   }, [allUserWorldviewKeys, userCredences]);
 
+  // Defer the slider-driven inputs so dragging the blend/worldview sliders
+  // doesn't block the main thread between drag events. The slider values
+  // (blendCredence, userCredencesRaw) update immediately for thumb tracking;
+  // the expensive allocation recompute runs against the deferred copies and
+  // catches up when React has spare cycles.
+  const deferredBlendCredence = useDeferredValue(blendCredence);
+  const deferredUserCredencesArray = useDeferredValue(userCredencesArray);
+
   // Compute allocations for the active view (per-fund). Wrapped in try/catch
   // so a transient invalid state (e.g. credences briefly drifting due to rapid
   // slider drags) can't blank the entire results view — null signals failure
@@ -211,8 +228,8 @@ function SimpleResultsScreen() {
         const combined = blendRunWorldviews(
           blendEnabled ? specialBlendConfig.worldviews : [],
           allUserRuns,
-          blendEnabled ? blendCredence : 0,
-          userCredencesArray
+          blendEnabled ? deferredBlendCredence : 0,
+          deferredUserCredencesArray
         );
         return computeBlendedAllocations(
           combined,
@@ -246,8 +263,8 @@ function SimpleResultsScreen() {
     dataset,
     budget,
     blendEnabled,
-    blendCredence,
-    userCredencesArray,
+    deferredBlendCredence,
+    deferredUserCredencesArray,
   ]);
 
   // Cache the last successful allocations so a transient compute error falls
@@ -444,6 +461,7 @@ function SimpleResultsScreen() {
             e.stopPropagation();
             startEditing(id, name);
           }}
+          aria-label={`Rename ${name}`}
           title="Rename"
         >
           &#9998;
@@ -456,7 +474,9 @@ function SimpleResultsScreen() {
     <div className={`screen ${styles.resultsScreen}`}>
       <div className={styles.resultsTopBar}>
         <Header />
-        <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
+        <h1 ref={headingRef} tabIndex={-1} className={styles.resultsHeading}>
+          Recommended Allocations
+        </h1>
         {copy.results.resultsExplanationLead && (
           <div className={styles.resultsExplanationTop}>
             {copy.results.resultsExplanationLead}
@@ -470,7 +490,7 @@ function SimpleResultsScreen() {
         )}
       </div>
 
-      <main className={`screen-main ${styles.resultsMain}`}>
+      <main id="main-content" className={`screen-main ${styles.resultsMain}`}>
         <div className={styles.resultsContainer}>
           {displayAllocations && (
             <div className={styles.resultsRow}>
@@ -504,6 +524,7 @@ function SimpleResultsScreen() {
                     <div className={styles.savedWorldviewSliderCell}>
                       <CompactSlider
                         label=""
+                        ariaLabel={`Credence for ${sw.name}`}
                         value={userCredences[sw.uid] || 0}
                         onChange={(val) => handleUserCredenceChange(sw.uid, val)}
                         color="#2a9ab5"
@@ -516,6 +537,7 @@ function SimpleResultsScreen() {
                     <button
                       className={styles.savedWorldviewRemove}
                       onClick={() => removeWorldview(sw.uid)}
+                      aria-label={`Remove worldview ${sw.name}`}
                       title="Remove worldview"
                     >
                       &times;
@@ -530,6 +552,7 @@ function SimpleResultsScreen() {
                   <div className={styles.savedWorldviewSliderCell}>
                     <CompactSlider
                       label=""
+                      ariaLabel={`Credence for ${currentRunName}`}
                       value={userCredences['current'] || 0}
                       onChange={(val) => handleUserCredenceChange('current', val)}
                       color="#2a9ab5"
@@ -542,6 +565,7 @@ function SimpleResultsScreen() {
                   <button
                     className={styles.savedWorldviewRemove}
                     onClick={removeCurrent}
+                    aria-label={`Remove worldview ${currentRunName}`}
                     title="Remove worldview"
                   >
                     &times;
@@ -677,6 +701,12 @@ function SimpleResultsScreen() {
                 </button>
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
               </div>
+              <button
+                className={`btn btn-secondary btn-sm ${styles.advancedModeButton}`}
+                onClick={goToAdvancedMode}
+              >
+                {copy.results.advancedModeButton}
+              </button>
             </div>
           </div>
 

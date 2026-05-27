@@ -12,14 +12,13 @@ function SimpleWelcomeScreen() {
   return (
     <div className="screen">
       <div className={styles.constrainedTopBar}>
-        <Header subtitle="~2 minutes" />
+        <Header subtitle="~5 minutes" />
       </div>
 
-      <main className="screen-main">
+      <main id="main-content" className="screen-main">
         <div className={styles.welcomeContainer}>
           <h1 className={styles.welcomeHeading}>
-            Where Should Your
-            <br />
+            Where Should Your <br className={styles.welcomeHeadingBreak} />
             Giving Go?
           </h1>
 
