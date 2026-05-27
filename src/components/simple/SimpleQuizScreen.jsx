@@ -93,7 +93,7 @@ function SimpleQuizScreen() {
 
   return (
     <div className="screen">
-      <div className={styles.constrainedTopBar}>
+      <div className={`${styles.constrainedTopBar} ${styles.questionTopBar}`}>
         <Header subtitle={`Question ${questionIndex + 1} of ${totalQuestions}`} />
         <ProgressBar percentage={progressPercentage} />
       </div>
@@ -102,7 +102,10 @@ function SimpleQuizScreen() {
         <div
           className={`${styles.questionContainer} ${isCredence && hasPresets ? styles.questionContainerWide : ''}`}
         >
-          <div className={styles.questionNumber}>Question {questionIndex + 1}</div>
+          <div className={styles.questionNumber}>
+            Question {questionIndex + 1}
+            <span className={styles.questionNumberOf}> of {totalQuestions}</span>
+          </div>
 
           <h2
             className={`${styles.questionHeading} ${currentQuestion.subheading ? styles.questionHeadingTight : ''}`}

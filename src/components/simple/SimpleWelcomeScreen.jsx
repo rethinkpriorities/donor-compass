@@ -18,8 +18,7 @@ function SimpleWelcomeScreen() {
       <main className="screen-main">
         <div className={styles.welcomeContainer}>
           <h1 className={styles.welcomeHeading}>
-            Where Should Your
-            <br />
+            Where Should Your <br className={styles.welcomeHeadingBreak} />
             Giving Go?
           </h1>
 

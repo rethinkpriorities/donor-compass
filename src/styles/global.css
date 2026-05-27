@@ -413,6 +413,17 @@ input[type='range']::-moz-range-thumb {
 /* ===== RESPONSIVE ===== */
 
 @media (max-width: 768px) {
+  /* iOS Safari auto-zooms when a focused form control's font-size is under
+     16px. Bumping the floor on touch-sized viewports keeps the page locked
+     at 1x without disabling user pinch-zoom (which would violate WCAG 1.4.4).
+     !important is needed because CSS-module class selectors (e.g.
+     .manualFieldInput) otherwise outrank this tag-level rule. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
   .header,
   .screen-main,
   .progress-container {
@@ -439,12 +450,6 @@ input[type='range']::-moz-range-thumb {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-2);
-  }
-
-  .header-with-subtitle .header-brand {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-4);
   }
 
   .header-with-subtitle .header-title {

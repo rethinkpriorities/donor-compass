@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback, useDeferredValue } from 'react';
 import { ChevronRight } from 'lucide-react';
 import Header from '../layout/Header';
 import ResultCard from '../ui/ResultCard';
@@ -196,6 +196,14 @@ function SimpleResultsScreen() {
     return allUserWorldviewKeys.map((k) => userCredences[k] || 0);
   }, [allUserWorldviewKeys, userCredences]);
 
+  // Defer the slider-driven inputs so dragging the blend/worldview sliders
+  // doesn't block the main thread between drag events. The slider values
+  // (blendCredence, userCredencesRaw) update immediately for thumb tracking;
+  // the expensive allocation recompute runs against the deferred copies and
+  // catches up when React has spare cycles.
+  const deferredBlendCredence = useDeferredValue(blendCredence);
+  const deferredUserCredencesArray = useDeferredValue(userCredencesArray);
+
   // Compute allocations for the active view (per-fund). Wrapped in try/catch
   // so a transient invalid state (e.g. credences briefly drifting due to rapid
   // slider drags) can't blank the entire results view — null signals failure
@@ -212,8 +220,8 @@ function SimpleResultsScreen() {
         const combined = blendRunWorldviews(
           blendEnabled ? specialBlendConfig.worldviews : [],
           allUserRuns,
-          blendEnabled ? blendCredence : 0,
-          userCredencesArray
+          blendEnabled ? deferredBlendCredence : 0,
+          deferredUserCredencesArray
         );
         return computeBlendedAllocations(
           combined,
@@ -247,8 +255,8 @@ function SimpleResultsScreen() {
     dataset,
     budget,
     blendEnabled,
-    blendCredence,
-    userCredencesArray,
+    deferredBlendCredence,
+    deferredUserCredencesArray,
   ]);
 
   // Cache the last successful allocations so a transient compute error falls
@@ -678,7 +686,10 @@ function SimpleResultsScreen() {
                 </button>
                 <InfoTooltip content={copy.results.saveAndRetakeDescription} />
               </div>
-              <button className="btn btn-secondary btn-sm" onClick={goToAdvancedMode}>
+              <button
+                className={`btn btn-secondary btn-sm ${styles.advancedModeButton}`}
+                onClick={goToAdvancedMode}
+              >
                 {copy.results.advancedModeButton}
               </button>
             </div>

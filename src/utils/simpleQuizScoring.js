@@ -1,4 +1,5 @@
 import { computeMarcusAllocation } from './marcusCalculation';
+import { randomId } from './randomId';
 import worldviewPresets from '../../config/worldviewPresets.json';
 import quizConfig from '../../config/simpleQuizConfig.json';
 
@@ -348,7 +349,7 @@ export function worldviewToTableHandoff(worldviews) {
       ...wv.worldview,
       name: wv.name,
       presetId: null,
-      uid: crypto.randomUUID(),
+      uid: randomId(),
     };
   });
   return { worldviews: wvs, credences };

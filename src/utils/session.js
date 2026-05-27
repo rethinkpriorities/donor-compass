@@ -3,6 +3,8 @@
  * Uses sessionStorage for tab-scoped persistence.
  */
 
+import { randomId } from './randomId';
+
 const STORAGE_KEYS = {
   SESSION_ID: 'quiz_session_id',
   QUIZ_STATE: 'quiz_state',
@@ -17,7 +19,7 @@ const STATE_VERSION = 9;
 export function getOrCreateSessionId() {
   let sessionId = sessionStorage.getItem(STORAGE_KEYS.SESSION_ID);
   if (!sessionId) {
-    sessionId = crypto.randomUUID();
+    sessionId = randomId();
     sessionStorage.setItem(STORAGE_KEYS.SESSION_ID, sessionId);
   }
   return sessionId;
