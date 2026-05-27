@@ -45,7 +45,7 @@ Access via the "Go to Advanced Mode" button on the simple quiz results screen, o
 
 ```bash
 # Clone the repository (or navigate to your project directory)
-cd quiz-demo
+cd donor-compass
 
 # Install dependencies
 npm install
@@ -176,7 +176,7 @@ npm run snapshot a               # Rebuilds, tags as v2
 ## 📁 Project Structure
 
 ```
-quiz-demo/
+donor-compass/
 ├── config/                         # JSON configuration files
 │   ├── causes.json                 # Cause definitions (points, colors, flags)
 │   ├── copy.json                   # UI copy/text content

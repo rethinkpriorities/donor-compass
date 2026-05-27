@@ -242,6 +242,7 @@ function EditAnswerItem({
                     <div className={styles.editCredenceSlider}>
                       <CompactSlider
                         label=""
+                        ariaLabel={`Credence for: ${option.shortLabel || option.label}`}
                         value={credences?.[option.id] || 0}
                         thumbValue={thumbValues ? (thumbValues[option.id] ?? 0) : undefined}
                         onChange={(val, base, round) =>

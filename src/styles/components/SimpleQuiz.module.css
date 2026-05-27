@@ -12,6 +12,12 @@
   margin: 0 auto;
 }
 
+/* " of N" suffix on the inline "Question N" label — shown only on mobile,
+   where the top-strip "Question N of N" subtitle is hidden. */
+.questionNumberOf {
+  display: none;
+}
+
 @media (min-width: 769px) {
   .constrainedTopBar :global(.header),
   .constrainedTopBar :global(.progress-container) {
@@ -417,6 +423,13 @@
   transition: background 0.4s ease-out;
 }
 
+/* Suppress the fill transition while the user is actively dragging so the
+   blue fill tracks the thumb instead of lagging 400ms behind. The transition
+   stays on for programmatic value changes (e.g. preset clicks). */
+.manualSlider:active {
+  transition: none;
+}
+
 .manualSliderValue {
   font-size: var(--text-3xl);
   font-weight: var(--font-semibold);
@@ -770,6 +783,12 @@
   line-height: 1;
   transition: var(--transition-fast);
   flex-shrink: 0;
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). */
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .savedWorldviewEdit:hover {
@@ -785,6 +804,12 @@
   padding: var(--spacing-1) var(--spacing-3);
   line-height: 1;
   transition: var(--transition-fast);
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). */
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .savedWorldviewRemove:hover {
@@ -1223,6 +1248,19 @@
     padding: 0 var(--spacing-8);
   }
 
+  /* Results screen: pull the heading/explanation block inward to match the
+     16px gutter used by .resultsContainer below it, and strip the global
+     .screen-main 32px so the result card isn't double-padded. */
+  .resultsTopBar {
+    padding: 0 var(--spacing-8);
+  }
+
+  .resultsScreen :global(.screen-main),
+  .resultsMain {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .manualGrid {
     grid-template-columns: 1fr;
   }
@@ -1240,11 +1278,43 @@
 
   .secondaryCtas {
     flex-direction: column;
+    align-items: stretch;
+    padding: 0 var(--spacing-8);
+  }
+
+  /* Match the donate-CTA width: each secondary button stretches to the
+     row width and centers its label. */
+  .secondaryCtas > button,
+  .secondaryCtas :global(.btn) {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .ctaWithTooltip {
+    width: 100%;
+  }
+
+  /* Drop the left-side balancer on mobile so the button fills the row;
+     the info icon sits to its right and visually balances against the
+     fully-stretched button. */
+  .ctaWithTooltip::before {
+    display: none;
+  }
+
+  .ctaWithTooltip > :global(.btn) {
+    flex: 1;
+  }
+
+  .secondaryCtas .advancedModeButton {
+    display: none;
   }
 
   .advancedPanel {
     flex-direction: column;
-    align-items: center;
+    /* stretch (not center) so the edit-answers card holds a stable width
+       regardless of which preset is selected. */
+    align-items: stretch;
   }
 
   .resultsRow {
@@ -1258,8 +1328,41 @@
     grid-row: auto;
   }
 
+  .questionMain {
+    padding: var(--spacing-8) var(--spacing-4) var(--spacing-16);
+  }
+
+  .constrainedTopBar :global(.header),
+  .constrainedTopBar :global(.progress-container) {
+    padding-left: var(--spacing-4);
+    padding-right: var(--spacing-4);
+  }
+
+  /* On mobile, the "Question N of N" lives inline above the heading; hide
+     the duplicate in the top strip and re-center the lone brand. */
+  .questionTopBar :global(.header-subtitle) {
+    display: none;
+  }
+
+  .questionTopBar :global(.header-with-subtitle) {
+    justify-content: center;
+  }
+
+  .questionNumberOf {
+    display: inline;
+  }
+
   .controlsRow {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcomeHeadingBreak {
+    display: none;
+  }
+
+  .welcomeQuestionsGrid {
+    grid-template-columns: 1fr;
   }
 
   .editAnswerOptions {

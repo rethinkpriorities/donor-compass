@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { computeMultiStageAllocation, computeWeightedAllocation } from '../utils/marcusCalculation';
 import { adjustCredences, roundCredences } from '../utils/calculations';
+import { randomId } from '../utils/randomId';
 import { useDataset } from '../context/DatasetContext';
 import { useQuiz } from '../context/useQuiz';
 import tableConfig from '../../config/tableMode.json';
@@ -14,7 +15,7 @@ function createWorldview(presetId) {
     const preset = tableConfig.presets.find((p) => p.id === presetId);
     if (preset) {
       const { id, name, ...data } = preset;
-      return { ...JSON.parse(JSON.stringify(data)), name, presetId: id, uid: crypto.randomUUID() };
+      return { ...JSON.parse(JSON.stringify(data)), name, presetId: id, uid: randomId() };
     }
   }
   const template = worldviewPresets.defaultWorldview;
@@ -22,7 +23,7 @@ function createWorldview(presetId) {
     ...JSON.parse(JSON.stringify(template)),
     name: 'Custom',
     presetId: null,
-    uid: crypto.randomUUID(),
+    uid: randomId(),
   };
 }
 
@@ -42,7 +43,7 @@ function buildEqualCredences(count) {
 
 function createDefaultStage() {
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     method: tableConfig.votingMethods[0].key,
     budget: tableConfig.totalBudget,
     options: {},
@@ -56,7 +57,7 @@ function migrateToStages(savedState) {
   if (savedState.stages) return savedState.stages;
   return [
     {
-      id: crypto.randomUUID(),
+      id: randomId(),
       method: savedState.selectedMethod || tableConfig.votingMethods[0].key,
       budget: savedState.totalBudget ?? tableConfig.totalBudget,
       options: savedState.methodOptions?.[savedState.selectedMethod] ?? {},
@@ -181,7 +182,7 @@ export function useTableState() {
       return [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: randomId(),
           method: tableConfig.votingMethods[0].key,
           budget: remaining,
           options: {},
@@ -444,7 +445,7 @@ export function useTableState() {
       // Backward compat: convert old format to single stage
       newStages = [
         {
-          id: crypto.randomUUID(),
+          id: randomId(),
           method: shareData.selectedMethod,
           budget: shareData.totalBudget ?? tableConfig.totalBudget,
           options: shareData.methodOptions?.[shareData.selectedMethod] ?? {},

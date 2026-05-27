@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import MailtoLink from './MailtoLink';
 import styles from '../../styles/components/NetworkBlockedModal.module.css';
@@ -7,11 +8,26 @@ import styles from '../../styles/components/NetworkBlockedModal.module.css';
  * (e.g. Privacy Badger, uBlock Origin) blocking cross-origin API requests.
  */
 function NetworkBlockedModal({ onDismiss, context = 'share' }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onDismiss();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onDismiss]);
+
   return (
-    <div className={styles.overlay}>
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="network-blocked-title"
+    >
       <div className={styles.modal}>
-        <ShieldAlert size={48} className={styles.icon} />
-        <h2 className={styles.title}>Request Blocked</h2>
+        <ShieldAlert size={48} className={styles.icon} aria-hidden="true" />
+        <h2 id="network-blocked-title" className={styles.title}>
+          Request Blocked
+        </h2>
         <p className={styles.message}>
           We couldn&rsquo;t reach our server. This is usually caused by a browser privacy extension
           (such as <strong>Privacy Badger</strong>, <strong>uBlock Origin</strong>, or{' '}

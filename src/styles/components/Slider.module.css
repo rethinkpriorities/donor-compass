@@ -157,6 +157,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). */
+  min-width: 24px;
+  min-height: 24px;
 }
 
 .compactSlider .lockButton:hover {

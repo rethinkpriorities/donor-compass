@@ -480,8 +480,8 @@ Share quiz results via URL. Clicking "Share Results" copies a link that restores
 
 **Prototype-Specific URLs:**
 URLs include the full pathname, so prototypes generate links back to themselves:
-- Main app: `https://...github.io/quiz-demo/#results=...`
-- Prototype: `https://...github.io/quiz-demo/prototypes/share-results/#results=...`
+- Main app: `https://donorcompass.rethinkpriorities.org/#results=...`
+- Prototype: `https://...github.io/donor-compass/prototypes/share-results/#results=...`
 
 **Future Enhancement (Layer 2):**
 Graceful handling of stale URLs where quiz config has changed. See CLAUDE.md Planned Features.

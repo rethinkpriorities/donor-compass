@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { isValidEmail, submitEmailSignup } from '../../utils/emailSignup';
 import { renderMarkdownLink } from '../../utils/renderMarkdownLink';
 import copy from '../../../config/copy.json';
@@ -9,6 +9,14 @@ function EmailCaptureModal({ quizState, onClose }) {
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,9 +37,16 @@ function EmailCaptureModal({ quizState, onClose }) {
   };
 
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true">
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="email-capture-title"
+    >
       <div className={styles.modal}>
-        <h2 className={styles.title}>{c.title || 'Stay in the loop'}</h2>
+        <h2 id="email-capture-title" className={styles.title}>
+          {c.title || 'Stay in the loop'}
+        </h2>
         <p className={styles.body}>{c.body || ''}</p>
         <form className={styles.form} onSubmit={handleSubmit}>
           <input
