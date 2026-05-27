@@ -10,12 +10,16 @@
   justify-content: center;
   background: none;
   border: none;
-  padding: 0;
-  margin-left: 0.4rem;
+  padding: 5px;
+  margin-left: calc(0.4rem - 5px);
   cursor: pointer;
   color: rgba(255, 255, 255, 0.6);
   font-weight: normal;
   transition: color 0.2s ease;
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). Padding adds invisible
+     hit-area around the 14px icon without changing the visual size. */
+  min-width: 24px;
+  min-height: 24px;
 }
 
 .trigger:hover,

@@ -783,6 +783,12 @@
   line-height: 1;
   transition: var(--transition-fast);
   flex-shrink: 0;
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). */
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .savedWorldviewEdit:hover {
@@ -798,6 +804,12 @@
   padding: var(--spacing-1) var(--spacing-3);
   line-height: 1;
   transition: var(--transition-fast);
+  /* WCAG 2.5.8 target size minimum (24x24 CSS px). */
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .savedWorldviewRemove:hover {

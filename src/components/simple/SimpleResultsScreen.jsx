@@ -79,6 +79,14 @@ function SimpleResultsScreen() {
   const [editingName, setEditingName] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const editInputRef = useRef(null);
+  const headingRef = useRef(null);
+
+  // Move focus to the results heading on mount so assistive tech announces
+  // the new screen. preventScroll avoids conflict with the navigation
+  // scroll-to-top.
+  useEffect(() => {
+    if (headingRef.current) headingRef.current.focus({ preventScroll: true });
+  }, []);
 
   const showEmailCapture = Boolean(features.ui?.emailCapture) && !emailNagDismissed;
   const handleCloseEmailCapture = () => dismissEmailNag();
@@ -453,6 +461,7 @@ function SimpleResultsScreen() {
             e.stopPropagation();
             startEditing(id, name);
           }}
+          aria-label={`Rename ${name}`}
           title="Rename"
         >
           &#9998;
@@ -465,7 +474,9 @@ function SimpleResultsScreen() {
     <div className={`screen ${styles.resultsScreen}`}>
       <div className={styles.resultsTopBar}>
         <Header />
-        <h1 className={styles.resultsHeading}>Recommended Allocations</h1>
+        <h1 ref={headingRef} tabIndex={-1} className={styles.resultsHeading}>
+          Recommended Allocations
+        </h1>
         {copy.results.resultsExplanationLead && (
           <div className={styles.resultsExplanationTop}>
             {copy.results.resultsExplanationLead}
@@ -479,7 +490,7 @@ function SimpleResultsScreen() {
         )}
       </div>
 
-      <main className={`screen-main ${styles.resultsMain}`}>
+      <main id="main-content" className={`screen-main ${styles.resultsMain}`}>
         <div className={styles.resultsContainer}>
           {displayAllocations && (
             <div className={styles.resultsRow}>
@@ -513,6 +524,7 @@ function SimpleResultsScreen() {
                     <div className={styles.savedWorldviewSliderCell}>
                       <CompactSlider
                         label=""
+                        ariaLabel={`Credence for ${sw.name}`}
                         value={userCredences[sw.uid] || 0}
                         onChange={(val) => handleUserCredenceChange(sw.uid, val)}
                         color="#2a9ab5"
@@ -525,6 +537,7 @@ function SimpleResultsScreen() {
                     <button
                       className={styles.savedWorldviewRemove}
                       onClick={() => removeWorldview(sw.uid)}
+                      aria-label={`Remove worldview ${sw.name}`}
                       title="Remove worldview"
                     >
                       &times;
@@ -539,6 +552,7 @@ function SimpleResultsScreen() {
                   <div className={styles.savedWorldviewSliderCell}>
                     <CompactSlider
                       label=""
+                      ariaLabel={`Credence for ${currentRunName}`}
                       value={userCredences['current'] || 0}
                       onChange={(val) => handleUserCredenceChange('current', val)}
                       color="#2a9ab5"
@@ -551,6 +565,7 @@ function SimpleResultsScreen() {
                   <button
                     className={styles.savedWorldviewRemove}
                     onClick={removeCurrent}
+                    aria-label={`Remove worldview ${currentRunName}`}
                     title="Remove worldview"
                   >
                     &times;

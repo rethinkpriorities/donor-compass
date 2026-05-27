@@ -71,6 +71,8 @@ function CredenceSlider({
             max="100"
             step="any"
             value={value}
+            aria-label={label || undefined}
+            aria-valuetext={`${Math.round(value)}%`}
             {...dragHandlers}
             data-dragging={isDragging}
             disabled={isLocked}
@@ -85,6 +87,8 @@ function CredenceSlider({
           <button
             className={`${styles.lockButton} ${isLocked ? styles.locked : ''} ${!isLocked && !canLockMore ? styles.lockDisabled : ''}`}
             onClick={handleLockClick}
+            aria-label={isLocked ? copy.sliders.unlockTooltip : copy.sliders.lockTooltip}
+            aria-pressed={isLocked}
             title={isLocked ? copy.sliders.unlockTooltip : copy.sliders.lockTooltip}
             type="button"
             disabled={!isLocked && !canLockMore}

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import Header from '../layout/Header';
 import ProgressBar from '../layout/ProgressBar';
 import InfoTooltip from '../ui/InfoTooltip';
@@ -39,6 +40,14 @@ function SimpleQuizScreen() {
   // Thumb tween for preset transitions (the percent text stays bound to the
   // real context value so it snaps; only the slider thumb interpolates).
   const { thumbValues, animateTo } = useCredenceAnimation();
+
+  // Move focus to the question heading on every step transition so assistive
+  // tech announces the new question. preventScroll avoids fighting with the
+  // window.scrollTo(0, 0) the navigation actions already do.
+  const headingRef = useRef(null);
+  useEffect(() => {
+    if (headingRef.current) headingRef.current.focus({ preventScroll: true });
+  }, [currentQuestion?.id]);
 
   if (!currentQuestion) return null;
 
@@ -98,7 +107,7 @@ function SimpleQuizScreen() {
         <ProgressBar percentage={progressPercentage} />
       </div>
 
-      <main className={styles.questionMain}>
+      <main id="main-content" className={styles.questionMain}>
         <div
           className={`${styles.questionContainer} ${isCredence && hasPresets ? styles.questionContainerWide : ''}`}
         >
@@ -108,6 +117,8 @@ function SimpleQuizScreen() {
           </div>
 
           <h2
+            ref={headingRef}
+            tabIndex={-1}
             className={`${styles.questionHeading} ${currentQuestion.subheading ? styles.questionHeadingTight : ''}`}
           >
             {currentQuestion.heading}
@@ -147,6 +158,7 @@ function SimpleQuizScreen() {
                         <div className={styles.credenceRowSlider}>
                           <CompactSlider
                             label=""
+                            ariaLabel={`Credence for: ${option.label}`}
                             value={questionCredences[option.id] || 0}
                             thumbValue={thumbValues ? (thumbValues[option.id] ?? 0) : undefined}
                             onChange={(val, base, round) =>

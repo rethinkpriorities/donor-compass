@@ -15,7 +15,7 @@ function SimpleWelcomeScreen() {
         <Header subtitle="~5 minutes" />
       </div>
 
-      <main className="screen-main">
+      <main id="main-content" className="screen-main">
         <div className={styles.welcomeContainer}>
           <h1 className={styles.welcomeHeading}>
             Where Should Your <br className={styles.welcomeHeadingBreak} />

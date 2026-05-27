@@ -484,6 +484,19 @@ export function SimpleQuizProvider({ children }) {
     hydrate();
   }, []);
 
+  // Keep the document title in sync with the current step so screen readers
+  // announce route-like changes and tab titles reflect progress.
+  useEffect(() => {
+    const step = state.currentStep;
+    let title = 'Donor Compass — Where Should Your Giving Go?';
+    if (step === 'results') {
+      title = 'Results — Donor Compass';
+    } else if (typeof step === 'number') {
+      title = `Question ${step + 1} of ${totalQuestions} — Donor Compass`;
+    }
+    document.title = title;
+  }, [state.currentStep]);
+
   // Persist state changes (debounced). Don't save disclaimer/welcome steps.
   const saveRef = useRef(null);
   useEffect(() => {
