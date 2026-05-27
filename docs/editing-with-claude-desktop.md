@@ -33,16 +33,16 @@ The dev server (the thing that renders the quiz locally) needs it.
 Open Terminal and run:
 
 ```
-git clone https://github.com/rethinkpriorities/quiz-demo.git
+git clone https://github.com/rethinkpriorities/donor-compass.git
 ```
 
-You'll end up with a `quiz-demo` folder somewhere on your machine.
+You'll end up with a `donor-compass` folder somewhere on your machine.
 
 ### 3. Open the project in Claude Code (inside Claude Desktop)
 
 In Claude Desktop, switch to the **Claude Code** mode (look for the
 folder/code icon in the sidebar). It will ask you for a working directory —
-point it at the `quiz-demo` folder.
+point it at the `donor-compass` folder.
 
 You only need to do this once; Claude Desktop remembers the folder.
 
