@@ -1260,6 +1260,7 @@
 
   .controlsRow {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .editAnswerOptions {
