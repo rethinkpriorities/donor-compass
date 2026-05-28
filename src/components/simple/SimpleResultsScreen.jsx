@@ -651,6 +651,32 @@ function SimpleResultsScreen() {
                           style={{ width: 130 }}
                         />
                       </div>
+                      {(() => {
+                        const sliderValue = Math.min(
+                          1000,
+                          Math.max(10, Math.round(budget / 10) * 10)
+                        );
+                        const pct = ((sliderValue - 10) / 990) * 100;
+                        return (
+                          <input
+                            type="range"
+                            min={10}
+                            max={1000}
+                            step={10}
+                            value={sliderValue}
+                            onChange={(e) => {
+                              const m = Number(e.target.value);
+                              setBudget(m);
+                              setBudgetInput((m * 1_000_000).toLocaleString('en-US'));
+                            }}
+                            className={resultStyles.budgetSlider}
+                            style={{
+                              background: `linear-gradient(to right, #2a9ab5 0%, #2a9ab5 ${pct}%, rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`,
+                            }}
+                            aria-label={copy.results.budgetLabel}
+                          />
+                        );
+                      })()}
                     </label>
 
                     <EditAnswersPanel
