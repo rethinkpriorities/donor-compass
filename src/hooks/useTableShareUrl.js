@@ -18,6 +18,7 @@ export function useTableShareUrl({
   aggregationMode,
   fundingCaps,
   drOverrides,
+  initialFunding,
   datasetId,
 }) {
   const [copied, setCopied] = useState(false);
@@ -36,6 +37,7 @@ export function useTableShareUrl({
         aggregationMode,
         fundingCaps,
         drOverrides,
+        initialFunding,
         datasetId,
       });
 
@@ -49,7 +51,16 @@ export function useTableShareUrl({
     } finally {
       setLoading(false);
     }
-  }, [worldviews, credences, stages, aggregationMode, fundingCaps, drOverrides, datasetId]);
+  }, [
+    worldviews,
+    credences,
+    stages,
+    aggregationMode,
+    fundingCaps,
+    drOverrides,
+    initialFunding,
+    datasetId,
+  ]);
 
   return { copied, loading, error, handleShare };
 }

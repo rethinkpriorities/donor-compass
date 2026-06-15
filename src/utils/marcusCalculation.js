@@ -1572,7 +1572,8 @@ export function computeMultiStageAllocation(
   stages,
   incrementSize,
   drOverrides,
-  drStepSize = 10
+  drStepSize = 10,
+  initialFunding = null
 ) {
   // Strip display-only fields once
   let cleanData = {};
@@ -1582,9 +1583,18 @@ export function computeMultiStageAllocation(
   }
   cleanData = applyDrOverrides(cleanData, drOverrides);
 
+  // Initial funding is a "DR head-start": it seeds each fund further along its
+  // diminishing-returns curve so newly-allocated dollars are valued at the
+  // already-diminished rate, but it does NOT consume budget and must NOT appear
+  // in the reported totals. We seed cumulativeFunding here (so DR factors read
+  // the shifted position and per-stage contributions naturally exclude the seed),
+  // then subtract the seed back out when reporting (below). Funding caps are
+  // interpreted as the total a fund may hold *including* its initial funding.
+  const seed = {};
   const cumulativeFunding = {};
   for (const projectId of Object.keys(cleanData)) {
-    cumulativeFunding[projectId] = 0;
+    seed[projectId] = Math.max(0, initialFunding?.[projectId] ?? 0);
+    cumulativeFunding[projectId] = seed[projectId];
   }
 
   const stageResults = [];
@@ -1618,14 +1628,21 @@ export function computeMultiStageAllocation(
     stageResults.push({ funding: stageContribution });
   }
 
+  // Subtract the DR head-start back out so initial funding never appears in the
+  // reported totals — displayed funding sums only to the allocated budget.
+  const displayFunding = {};
+  for (const projectId of Object.keys(cumulativeFunding)) {
+    displayFunding[projectId] = Math.max(0, cumulativeFunding[projectId] - seed[projectId]);
+  }
+
   // Compute final allocations as percentages of total funding
-  const totalFunded = Object.values(cumulativeFunding).reduce((s, v) => s + v, 0);
+  const totalFunded = Object.values(displayFunding).reduce((s, v) => s + v, 0);
   const allocations = {};
-  for (const [projectId, amount] of Object.entries(cumulativeFunding)) {
+  for (const [projectId, amount] of Object.entries(displayFunding)) {
     allocations[projectId] = totalFunded > 0 ? (amount / totalFunded) * 100 : 0;
   }
 
-  return { allocations, funding: cumulativeFunding, stageResults, debugTrace };
+  return { allocations, funding: displayFunding, stageResults, debugTrace };
 }
 
 /**
@@ -1657,7 +1674,8 @@ export function computeWeightedAllocation(
   stages,
   incrementSize,
   drOverrides,
-  drStepSize = 10
+  drStepSize = 10,
+  initialFunding = null
 ) {
   let cleanData = {};
   for (const [id, project] of Object.entries(projectData)) {
@@ -1668,6 +1686,14 @@ export function computeWeightedAllocation(
 
   const fundIds = Object.keys(cleanData);
   const emptyFunding = () => Object.fromEntries(fundIds.map((id) => [id, 0]));
+
+  // DR head-start seed (see computeMultiStageAllocation for the full rationale):
+  // each method runs with the seed pre-applied so its DR curve starts further
+  // along, but the seed is subtracted out of every method's reported funding so
+  // it never enters the weighted total.
+  const seed = Object.fromEntries(
+    fundIds.map((id) => [id, Math.max(0, initialFunding?.[id] ?? 0)])
+  );
 
   const totalWeight = stages.reduce((s, st) => s + (st.budget || 0), 0);
   if (totalWeight <= 0) {
@@ -1700,6 +1726,7 @@ export function computeWeightedAllocation(
 
     const { funding: methodFunding } = allocateBudget(cleanData, votingMethod, totalBudget, {
       incrementSize,
+      initialFunding: seed,
       customWorldviews: worldviews,
       debugTrace,
       debugMethod: stage.method,
@@ -1707,11 +1734,18 @@ export function computeWeightedAllocation(
       ...(stage.options || {}),
     });
 
+    // Exclude the DR head-start from the method's reported allocation so the seed
+    // never reaches the weighted total.
+    const methodNew = {};
+    for (const fid of fundIds) {
+      methodNew[fid] = Math.max(0, (methodFunding[fid] ?? 0) - (seed[fid] ?? 0));
+    }
+
     const stageContribution = {};
     const methodAllocPct = {};
-    const methodTotal = Object.values(methodFunding).reduce((s, v) => s + v, 0);
+    const methodTotal = Object.values(methodNew).reduce((s, v) => s + v, 0);
     for (const fid of fundIds) {
-      const amt = methodFunding[fid] ?? 0;
+      const amt = methodNew[fid];
       stageContribution[fid] = weight * amt;
       finalFunding[fid] += stageContribution[fid];
       methodAllocPct[fid] = methodTotal > 0 ? (amt / methodTotal) * 100 : 0;
@@ -1720,7 +1754,7 @@ export function computeWeightedAllocation(
     stageResults.push({ funding: stageContribution });
     perMethod[stage.method] = {
       allocations: methodAllocPct,
-      funding: methodFunding,
+      funding: methodNew,
       normWeight: weight,
     };
   }
