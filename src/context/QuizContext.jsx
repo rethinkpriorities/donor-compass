@@ -228,6 +228,7 @@ const initialState = {
   marketplaceBudget: null,
   fundingCaps: {}, // { projectId: number ($M) } — empty = no caps
   drOverrides: {}, // { projectId: power (0-1) } — empty = dataset default
+  initialFunding: {}, // { projectId: number ($M) } — DR head-start, excluded from totals (table mode)
   justCompletedWorldview: null, // ID of worldview just completed (for hub alert)
 };
 
@@ -247,6 +248,7 @@ const ACTIONS = {
   SET_MARKETPLACE_BUDGET: 'SET_MARKETPLACE_BUDGET',
   SET_FUNDING_CAPS: 'SET_FUNDING_CAPS',
   SET_DR_OVERRIDES: 'SET_DR_OVERRIDES',
+  SET_INITIAL_FUNDING: 'SET_INITIAL_FUNDING',
   SET_SELECTED_PRESET: 'SET_SELECTED_PRESET',
   SET_JUST_COMPLETED_WORLDVIEW: 'SET_JUST_COMPLETED_WORLDVIEW',
   CLEAR_JUST_COMPLETED_WORLDVIEW: 'CLEAR_JUST_COMPLETED_WORLDVIEW',
@@ -423,6 +425,7 @@ function quizReducer(state, action) {
         selectedCalculations: sourceSelectedCalculations,
         fundingCaps: sourceFundingCaps,
         drOverrides: sourceDrOverrides,
+        initialFunding: sourceInitialFunding,
       } = action.payload;
 
       // Helper to restore a single question's state
@@ -484,6 +487,7 @@ function quizReducer(state, action) {
           selectedCalculations: sourceSelectedCalculations || state.selectedCalculations,
           fundingCaps: sourceFundingCaps || state.fundingCaps,
           drOverrides: sourceDrOverrides || state.drOverrides,
+          initialFunding: sourceInitialFunding || state.initialFunding,
         };
       }
 
@@ -533,6 +537,9 @@ function quizReducer(state, action) {
 
     case ACTIONS.SET_DR_OVERRIDES:
       return { ...state, drOverrides: action.payload };
+
+    case ACTIONS.SET_INITIAL_FUNDING:
+      return { ...state, initialFunding: action.payload };
 
     case ACTIONS.SET_SELECTED_CALCULATIONS:
       return {
@@ -774,6 +781,7 @@ export function QuizProvider({ children }) {
         selectedCalculations: state.selectedCalculations,
         fundingCaps: state.fundingCaps,
         drOverrides: state.drOverrides,
+        initialFunding: state.initialFunding,
       });
     }, 300);
 
@@ -790,6 +798,7 @@ export function QuizProvider({ children }) {
     state.selectedCalculations,
     state.fundingCaps,
     state.drOverrides,
+    state.initialFunding,
     isHydrating,
   ]);
 
@@ -862,6 +871,10 @@ export function QuizProvider({ children }) {
 
   const setDrOverrides = useCallback((overrides) => {
     dispatch({ type: ACTIONS.SET_DR_OVERRIDES, payload: overrides });
+  }, []);
+
+  const setInitialFunding = useCallback((funding) => {
+    dispatch({ type: ACTIONS.SET_INITIAL_FUNDING, payload: funding });
   }, []);
 
   const setWorldviewName = useCallback((worldviewId, name) => {
@@ -1173,6 +1186,7 @@ export function QuizProvider({ children }) {
       marketplaceBudget: state.marketplaceBudget ?? dataset.budget,
       fundingCaps: state.fundingCaps,
       drOverrides: state.drOverrides,
+      initialFunding: state.initialFunding,
       justCompletedWorldview: state.justCompletedWorldview,
       shareUrlError,
       isHydrating,
@@ -1200,6 +1214,7 @@ export function QuizProvider({ children }) {
       setMarketplaceBudget,
       setFundingCaps,
       setDrOverrides,
+      setInitialFunding,
       setSelectedCalculations,
       setWorldviewName,
       clearJustCompletedWorldview,
@@ -1243,6 +1258,7 @@ export function QuizProvider({ children }) {
       state.marketplaceBudget,
       state.fundingCaps,
       state.drOverrides,
+      state.initialFunding,
       state.justCompletedWorldview,
       shareUrlError,
       isHydrating,
@@ -1261,6 +1277,7 @@ export function QuizProvider({ children }) {
       setMarketplaceBudget,
       setFundingCaps,
       setDrOverrides,
+      setInitialFunding,
       setSelectedCalculations,
       setWorldviewName,
       clearJustCompletedWorldview,

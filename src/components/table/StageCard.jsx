@@ -42,7 +42,8 @@ function StageCard({
     if (!/^\d*$/.test(raw)) return;
     const cleaned = raw.replace(/^0+/, '') || '';
     const val = Number(cleaned);
-    if (val >= 0 && val <= 1000) {
+    // No upper limit on stage budget (task 412); a warning shows above $1B total instead.
+    if (val >= 0) {
       setBudgetInput(cleaned);
       if (val > 0) onBudgetChange(index, val);
     }

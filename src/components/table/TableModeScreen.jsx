@@ -49,7 +49,14 @@ function TableModeScreen() {
     hydrateFromShare,
   } = useTableState();
 
-  const { fundingCaps, drOverrides, setFundingCaps, setDrOverrides } = useQuiz();
+  const {
+    fundingCaps,
+    drOverrides,
+    initialFunding,
+    setFundingCaps,
+    setDrOverrides,
+    setInitialFunding,
+  } = useQuiz();
   const { dataset, datasets, setActiveDataset } = useDataset();
 
   const [hydrating, setHydrating] = useState(false);
@@ -69,12 +76,20 @@ function TableModeScreen() {
       hydrateFromShare(data);
       if (data.fundingCaps) setFundingCaps(data.fundingCaps);
       if (data.drOverrides) setDrOverrides(data.drOverrides);
+      if (data.initialFunding) setInitialFunding(data.initialFunding);
       if (data.datasetId && datasets.some((d) => d.id === data.datasetId)) {
         setActiveDataset(data.datasetId);
       }
     }
     clearShareParam();
-  }, [hydrateFromShare, setFundingCaps, setDrOverrides, datasets, setActiveDataset]);
+  }, [
+    hydrateFromShare,
+    setFundingCaps,
+    setDrOverrides,
+    setInitialFunding,
+    datasets,
+    setActiveDataset,
+  ]);
 
   // Hydrate from share URL on mount
   useEffect(() => {
@@ -115,6 +130,7 @@ function TableModeScreen() {
     aggregationMode,
     fundingCaps,
     drOverrides,
+    initialFunding,
     datasetId: dataset.id,
   });
 

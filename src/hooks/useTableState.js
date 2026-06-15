@@ -144,11 +144,9 @@ function getInitialState() {
   return _initialState;
 }
 
-const MAX_TOTAL_BUDGET = 1000;
-
 export function useTableState() {
   const { dataset } = useDataset();
-  const { fundingCaps, drOverrides, isHydrating } = useQuiz();
+  const { fundingCaps, drOverrides, initialFunding, isHydrating } = useQuiz();
 
   const [worldviews, setWorldviews] = useState(() => {
     const saved = getInitialState();
@@ -176,19 +174,15 @@ export function useTableState() {
 
   // Stage callbacks
   const addStage = useCallback(() => {
-    setStages((prev) => {
-      const usedBudget = prev.reduce((sum, s) => sum + s.budget, 0);
-      const remaining = Math.max(0, MAX_TOTAL_BUDGET - usedBudget);
-      return [
-        ...prev,
-        {
-          id: randomId(),
-          method: tableConfig.votingMethods[0].key,
-          budget: remaining,
-          options: {},
-        },
-      ];
-    });
+    setStages((prev) => [
+      ...prev,
+      {
+        id: randomId(),
+        method: tableConfig.votingMethods[0].key,
+        budget: 0,
+        options: {},
+      },
+    ]);
   }, []);
 
   const removeStage = useCallback((index) => {
@@ -207,22 +201,6 @@ export function useTableState() {
         if (field === 'method') updated.options = {};
         return updated;
       });
-      // Clamp budgets so total <= MAX_TOTAL_BUDGET
-      if (field === 'budget') {
-        const total = next.reduce((sum, s) => sum + s.budget, 0);
-        if (total > MAX_TOTAL_BUDGET) {
-          const excess = total - MAX_TOTAL_BUDGET;
-          // Reduce other stages proportionally to fit
-          const othersTotal = total - next[index].budget;
-          if (othersTotal > 0) {
-            return next.map((s, i) => {
-              if (i === index) return s;
-              const ratio = s.budget / othersTotal;
-              return { ...s, budget: Math.max(0, Math.round(s.budget - excess * ratio)) };
-            });
-          }
-        }
-      }
       return next;
     });
   }, []);
@@ -302,7 +280,8 @@ export function useTableState() {
         stagesWithCaps,
         dataset.incrementSize,
         drOverrides,
-        dataset.drStepSize || 10
+        dataset.drStepSize || 10,
+        initialFunding
       );
       console.log(
         `[table] recalc stages (${mode})`,
@@ -326,7 +305,7 @@ export function useTableState() {
       for (const id of Object.keys(dataset.projects)) empty[id] = 0;
       return { allocations: empty, funding: empty, stageResults: [] };
     }
-  }, [debouncedState, dataset, isHydrating, fundingCaps, drOverrides]);
+  }, [debouncedState, dataset, isHydrating, fundingCaps, drOverrides, initialFunding]);
 
   const addWorldview = useCallback(() => {
     setWorldviews((prev) => {

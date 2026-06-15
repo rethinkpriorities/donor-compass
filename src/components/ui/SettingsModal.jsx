@@ -6,7 +6,14 @@ import styles from '../../styles/components/SettingsModal.module.css';
 
 function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
   const { dataset, datasets, setActiveDataset } = useDataset();
-  const { fundingCaps, setFundingCaps, drOverrides, setDrOverrides } = useQuiz();
+  const {
+    fundingCaps,
+    setFundingCaps,
+    drOverrides,
+    setDrOverrides,
+    initialFunding,
+    setInitialFunding,
+  } = useQuiz();
 
   // Local state mirrors fundingCaps for controlled inputs
   const projectEntries = useMemo(
@@ -29,6 +36,14 @@ function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
       dr[id] = drOverrides[id] != null ? String(Math.round((1 - drOverrides[id]) * 100)) : '';
     }
     return dr;
+  });
+
+  const [localInitial, setLocalInitial] = useState(() => {
+    const init = {};
+    for (const { id } of projectEntries) {
+      init[id] = initialFunding[id] != null ? String(initialFunding[id]) : '';
+    }
+    return init;
   });
 
   const handleSelect = (id) => {
@@ -69,6 +84,23 @@ function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
       setDrOverrides(newOverrides);
     },
     [drOverrides, setDrOverrides]
+  );
+
+  const handleInitialChange = useCallback(
+    (projectId, value) => {
+      setLocalInitial((prev) => ({ ...prev, [projectId]: value }));
+
+      // Commit to context immediately so calculations update live
+      const num = parseFloat(value);
+      const newInitial = { ...initialFunding };
+      if (value === '' || isNaN(num) || num <= 0) {
+        delete newInitial[projectId];
+      } else {
+        newInitial[projectId] = num;
+      }
+      setInitialFunding(newInitial);
+    },
+    [initialFunding, setInitialFunding]
   );
 
   return (
@@ -129,8 +161,15 @@ function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
             <h3 className={styles.sectionTitle}>Project Overrides</h3>
             <div className={styles.overridesHeader}>
               <span className={styles.overridesHeaderLabel}>Project</span>
-              <span className={styles.overridesHeaderCol}>Cap ($M)</span>
-              <span className={styles.overridesHeaderCol}>DR decay (%)</span>
+              <span className={`${styles.overridesHeaderCol} ${styles.overridesHeaderColMoney}`}>
+                Initial ($M)
+              </span>
+              <span className={`${styles.overridesHeaderCol} ${styles.overridesHeaderColMoney}`}>
+                Cap ($M)
+              </span>
+              <span className={`${styles.overridesHeaderCol} ${styles.overridesHeaderColPlain}`}>
+                DR decay (%)
+              </span>
             </div>
             <div className={styles.capsList}>
               {projectEntries.map(({ id, name, color }) => (
@@ -138,6 +177,19 @@ function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
                   <div className={styles.capLabel}>
                     <span className={styles.projectColor} style={{ background: color }} />
                     <span>{name}</span>
+                  </div>
+                  <div className={styles.capInputWrapper}>
+                    <span className={styles.capPrefix}>$</span>
+                    <input
+                      type="number"
+                      className={styles.capInput}
+                      value={localInitial[id] ?? ''}
+                      onChange={(e) => handleInitialChange(id, e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      step="10"
+                    />
+                    <span className={styles.capSuffix}>M</span>
                   </div>
                   <div className={styles.capInputWrapper}>
                     <span className={styles.capPrefix}>$</span>
@@ -166,7 +218,9 @@ function SettingsModal({ onClose, aggregationMode, onAggregationModeChange }) {
               ))}
             </div>
             <p className={styles.sectionHint}>
-              DR decay: % effectiveness lost per $10M increment. Empty = dataset default.
+              Initial: pre-existing funding that advances the fund along its diminishing-returns
+              curve. It does not consume budget and is not included in the results. DR decay: %
+              effectiveness lost per $10M increment. Empty = dataset default.
             </p>
           </div>
         </div>

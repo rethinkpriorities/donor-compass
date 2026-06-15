@@ -22,6 +22,13 @@ export const QUESTION_TYPE_COLORS = {
 // Neutralized to white to match overall scheme
 export const CATEGORY_LABEL_COLOR = 'rgba(255, 255, 255, 0.7)';
 
+// Total budget ($M) above which we warn that results extrapolate past our
+// diminishing-returns data. Fixed at $1B per product (task 412). NOTE: the DR
+// arrays in current datasets actually run out at 400M — beyond that the curve
+// is already held flat at its floor — but the user-facing warning threshold is
+// fixed at $1B by decision, independent of where each dataset's data ends.
+export const NO_DR_DATA_BUDGET = 1000;
+
 // Color palette
 export const COLORS = {
   // Primary colors

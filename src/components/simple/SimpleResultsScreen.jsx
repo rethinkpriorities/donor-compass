@@ -27,6 +27,7 @@ import styles from '../../styles/components/SimpleQuiz.module.css';
 import resultStyles from '../../styles/components/Results.module.css';
 import copy from '../../../config/copy.json';
 import donationConfig from '../../../config/donationPage.json';
+import { NO_DR_DATA_BUDGET } from '../../constants/config';
 
 /**
  * Results screen showing allocation percentages via ResultCard.
@@ -295,7 +296,8 @@ function SimpleResultsScreen() {
     if (!/^\d*$/.test(raw)) return;
     const cleaned = raw.replace(/^0+/, '') || '0';
     const val = Number(cleaned);
-    if (val >= 0 && val <= 1_000_000_000) {
+    // No upper limit on budget (task 412); a warning shows above $1B instead.
+    if (val >= 0) {
       setBudgetInput(val.toLocaleString('en-US'));
       if (val > 0) setBudget(val / 1_000_000);
     }
@@ -637,6 +639,12 @@ function SimpleResultsScreen() {
                         {copy.results.budgetInfo && (
                           <InfoTooltip content={copy.results.budgetInfo} />
                         )}
+                        {budget > NO_DR_DATA_BUDGET && copy.results.budgetNoDataWarning && (
+                          <InfoTooltip
+                            content={copy.results.budgetNoDataWarning}
+                            variant="warning"
+                          />
+                        )}
                       </span>
                       <div className={resultStyles.budgetInputWrapper}>
                         <span className={resultStyles.currencyPrefix}>$</span>
@@ -647,7 +655,7 @@ function SimpleResultsScreen() {
                           onChange={handleBudgetChange}
                           onBlur={handleBudgetBlur}
                           onKeyDown={handleBudgetKeyDown}
-                          className={resultStyles.budgetInput}
+                          className={`${resultStyles.budgetInput} ${budget > NO_DR_DATA_BUDGET ? resultStyles.budgetInputWarning : ''}`}
                           style={{ width: 130 }}
                         />
                       </div>

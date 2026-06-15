@@ -44,6 +44,8 @@ export async function generateTableShareUrl(state) {
       Object.keys(state.fundingCaps).length > 0 && { fundingCaps: state.fundingCaps }),
     ...(state.drOverrides &&
       Object.keys(state.drOverrides).length > 0 && { drOverrides: state.drOverrides }),
+    ...(state.initialFunding &&
+      Object.keys(state.initialFunding).length > 0 && { initialFunding: state.initialFunding }),
     ...(state.datasetId && { datasetId: state.datasetId }),
   };
 
@@ -108,6 +110,7 @@ export async function parseTableShareUrl() {
 
     if (data.fundingCaps) result.fundingCaps = data.fundingCaps;
     if (data.drOverrides) result.drOverrides = data.drOverrides;
+    if (data.initialFunding) result.initialFunding = data.initialFunding;
     if (data.datasetId) result.datasetId = data.datasetId;
 
     return result;

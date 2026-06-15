@@ -151,11 +151,11 @@
 }
 
 /* Match the width of the inputs + prefix/suffix they sit above */
-.overridesHeaderCol:first-of-type {
+.overridesHeaderColMoney {
   width: calc(5.5rem + 1.5rem); /* input + $ + M + gaps */
 }
 
-.overridesHeaderCol:last-child {
+.overridesHeaderColPlain {
   width: 5.5rem;
 }
 

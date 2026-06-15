@@ -4,14 +4,15 @@ import AllocationBar from './AllocationBar';
 import ClusterGroup from './ClusterGroup';
 import StageCard from './StageCard';
 import ResultsModal from './ResultsModal';
+import InfoTooltip from '../ui/InfoTooltip';
 import { useDataset } from '../../context/DatasetContext';
 import { useQuiz } from '../../context/useQuiz';
 import { clusterAllocations } from '../../utils/fundClusters';
+import { NO_DR_DATA_BUDGET } from '../../constants/config';
 import features from '../../../config/features.json';
 import tableConfig from '../../../config/tableMode.json';
+import copy from '../../../config/copy.json';
 import styles from '../../styles/components/TableMode.module.css';
-
-const MAX_TOTAL_BUDGET = 1000;
 
 function ResultsPanel({
   stages,
@@ -29,7 +30,7 @@ function ResultsPanel({
   const { fundingCaps } = useQuiz();
   const projectEntries = Object.entries(dataset.projects);
   const totalBudget = stages.reduce((sum, s) => sum + s.budget, 0);
-  const canAddStage = totalBudget < MAX_TOTAL_BUDGET;
+  const overDrData = totalBudget > NO_DR_DATA_BUDGET;
 
   const useClusters = features.ui?.fundClusters && dataset.clusters?.length > 0;
 
@@ -80,19 +81,20 @@ function ResultsPanel({
         </div>
       ))}
 
-      {canAddStage && (
-        <>
-          <div className={styles.stageConnector}>
-            {!isWeighted && <div className={styles.stageArrow} />}
-          </div>
-          <button className={styles.addStageButton} onClick={onAddStage}>
-            {isWeighted ? '+ Add Method' : '+ Add Stage'}
-          </button>
-        </>
-      )}
+      <div className={styles.stageConnector}>
+        {!isWeighted && <div className={styles.stageArrow} />}
+      </div>
+      <button className={styles.addStageButton} onClick={onAddStage}>
+        {isWeighted ? '+ Add Method' : '+ Add Stage'}
+      </button>
 
       <div className={styles.budgetSummary}>
-        Total: ${totalBudget}M / ${MAX_TOTAL_BUDGET}M
+        <span className={overDrData ? styles.budgetSummaryWarning : ''}>
+          Total: ${totalBudget}M
+        </span>
+        {overDrData && copy.results.budgetNoDataWarning && (
+          <InfoTooltip content={copy.results.budgetNoDataWarning} variant="warning" />
+        )}
       </div>
 
       <div className={styles.stageConnector}>
