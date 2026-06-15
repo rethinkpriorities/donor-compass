@@ -1606,8 +1606,7 @@ export function computeMultiStageAllocation(
       throw new Error(`Unknown voting method: ${stage.method}`);
     }
 
-    // Hard ceiling: never run with more than $1B ($1000M) regardless of input
-    const stageBudget = Math.min(stage.budget, 1000);
+    const stageBudget = stage.budget;
     const { funding } = allocateBudget(cleanData, votingMethod, stageBudget, {
       incrementSize,
       initialFunding: cumulativeFunding,
@@ -1706,7 +1705,7 @@ export function computeWeightedAllocation(
     };
   }
 
-  const totalBudget = Math.min(totalWeight, 1000);
+  const totalBudget = totalWeight;
   const finalFunding = emptyFunding();
   const stageResults = [];
   const perMethod = {};

@@ -144,8 +144,6 @@ function getInitialState() {
   return _initialState;
 }
 
-const MAX_TOTAL_BUDGET = 1000;
-
 export function useTableState() {
   const { dataset } = useDataset();
   const { fundingCaps, drOverrides, initialFunding, isHydrating } = useQuiz();
@@ -176,19 +174,15 @@ export function useTableState() {
 
   // Stage callbacks
   const addStage = useCallback(() => {
-    setStages((prev) => {
-      const usedBudget = prev.reduce((sum, s) => sum + s.budget, 0);
-      const remaining = Math.max(0, MAX_TOTAL_BUDGET - usedBudget);
-      return [
-        ...prev,
-        {
-          id: randomId(),
-          method: tableConfig.votingMethods[0].key,
-          budget: remaining,
-          options: {},
-        },
-      ];
-    });
+    setStages((prev) => [
+      ...prev,
+      {
+        id: randomId(),
+        method: tableConfig.votingMethods[0].key,
+        budget: 0,
+        options: {},
+      },
+    ]);
   }, []);
 
   const removeStage = useCallback((index) => {
@@ -207,22 +201,6 @@ export function useTableState() {
         if (field === 'method') updated.options = {};
         return updated;
       });
-      // Clamp budgets so total <= MAX_TOTAL_BUDGET
-      if (field === 'budget') {
-        const total = next.reduce((sum, s) => sum + s.budget, 0);
-        if (total > MAX_TOTAL_BUDGET) {
-          const excess = total - MAX_TOTAL_BUDGET;
-          // Reduce other stages proportionally to fit
-          const othersTotal = total - next[index].budget;
-          if (othersTotal > 0) {
-            return next.map((s, i) => {
-              if (i === index) return s;
-              const ratio = s.budget / othersTotal;
-              return { ...s, budget: Math.max(0, Math.round(s.budget - excess * ratio)) };
-            });
-          }
-        }
-      }
       return next;
     });
   }, []);

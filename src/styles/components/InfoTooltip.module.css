@@ -28,6 +28,17 @@
   outline: none;
 }
 
+/* Warning variant: amber alert icon used when results extrapolate past our
+   diminishing-returns data (see NO_DR_DATA_BUDGET). */
+.triggerWarning {
+  color: #f2cc8f;
+}
+
+.triggerWarning:hover,
+.triggerWarning:focus {
+  color: #f7b955;
+}
+
 .popover {
   position: fixed;
   /* Just below modals (1000) so the tooltip sits in front of all page content

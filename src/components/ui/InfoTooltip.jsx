@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Info } from 'lucide-react';
+import { Info, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import styles from '../../styles/components/InfoTooltip.module.css';
 
@@ -15,7 +15,7 @@ import styles from '../../styles/components/InfoTooltip.module.css';
  * popover is no longer a DOM descendant of the wrapper, visibility is driven by
  * state rather than the CSS :hover selector.
  */
-function InfoTooltip({ content, size = 14 }) {
+function InfoTooltip({ content, size = 14, variant = 'info' }) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
@@ -118,19 +118,22 @@ function InfoTooltip({ content, size = 14 }) {
 
   if (!content) return null;
 
+  const isWarning = variant === 'warning';
+  const Icon = isWarning ? AlertTriangle : Info;
+
   return (
     <span ref={wrapperRef} className={styles.wrapper} onMouseEnter={show} onMouseLeave={hideSoon}>
       <button
         ref={triggerRef}
         type="button"
-        className={styles.trigger}
+        className={`${styles.trigger} ${isWarning ? styles.triggerWarning : ''}`}
         onFocus={show}
         onBlur={hide}
         onClick={handleClick}
         onTouchStart={handleTouchStart}
-        aria-label="More information"
+        aria-label={isWarning ? 'Warning' : 'More information'}
       >
-        <Info size={size} />
+        <Icon size={size} />
       </button>
       {createPortal(
         <span

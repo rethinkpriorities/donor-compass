@@ -92,6 +92,12 @@
   outline: none;
 }
 
+/* Amber when budget extrapolates past our diminishing-returns data (task 412). */
+.budgetInputWarning,
+.budgetInputWarning:focus {
+  color: #f7b955;
+}
+
 .budgetUnit {
   color: var(--text-gray);
   font-size: var(--text-sm);

@@ -449,6 +449,15 @@
   padding: var(--spacing-2) 0;
   font-weight: var(--font-semibold);
   letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Amber when total budget extrapolates past our diminishing-returns data (task 412). */
+.budgetSummaryWarning {
+  color: #f7b955;
 }
 
 /* === RESULTS CARD === */
