@@ -10,6 +10,7 @@ import SimpleQuizScreen from './simple/SimpleQuizScreen';
 import SimpleResultsScreen from './simple/SimpleResultsScreen';
 import DonationPage from './donate/DonationPage';
 import ExportPage from './export/ExportPage';
+import ValueModeScreen from './value/ValueModeScreen';
 import CalculationDebugger from './CalculationDebugger';
 import { useState, useEffect } from 'react';
 import { useQuiz } from '../context/useQuiz';
@@ -48,12 +49,14 @@ function MoralParliamentQuiz() {
   const [isExportRoute, setIsExportRoute] = useState(() =>
     window.location.hash.startsWith('#export')
   );
+  const [isValueRoute, setIsValueRoute] = useState(() => window.location.hash.startsWith('#value'));
 
   useEffect(() => {
     const onHashChange = () => {
       setIsTableRoute(window.location.hash.startsWith('#table'));
       setIsDonateRoute(window.location.hash.startsWith('#donate'));
       setIsExportRoute(window.location.hash.startsWith('#export'));
+      setIsValueRoute(window.location.hash.startsWith('#value'));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -72,6 +75,11 @@ function MoralParliamentQuiz() {
   // Hash route: #table renders Table Mode directly
   if (isTableRoute) {
     return <TableModeScreen />;
+  }
+
+  // Hash route: #value renders Value Mode directly
+  if (isValueRoute) {
+    return <ValueModeScreen />;
   }
 
   // Show nothing while hydrating to avoid flash of welcome screen
