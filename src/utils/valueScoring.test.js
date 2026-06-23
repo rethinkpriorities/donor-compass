@@ -156,4 +156,48 @@ describe('evaluateWorldviewRow', () => {
     expect(r.gap).toBeCloseTo(50, 9);
     expect(r.close.closed).toBe(false);
   });
+
+  describe('floorNegativeScores', () => {
+    // A project with a negative base: a $1M allocation scores -10 (no DR effect
+    // at flat 1), so allocations into it drag the worldview's score negative.
+    const data = {
+      neg: makeProject(-10, [1, 1, 1, 1, 1, 1]),
+      pos: makeProject(10, [1, 1, 1, 1, 1, 1]),
+    };
+    const base = computeBase(data, worldview(1)); // neg base -10, pos base 10
+    const params = { drStepSize: 1, step: 1, chunk: 1, maxDollars: 1000 };
+
+    it('clamps a negative score to 0 and measures only the climb to the other', () => {
+      // Allocation 1 = $5M into the negative project -> raw -50, clamped 0.
+      // Allocation 2 = $3M into the positive project -> +30.
+      const r = evaluateWorldviewRow(data, { neg: 5 }, { pos: 3 }, base, {
+        ...params,
+        floorNegativeScores: true,
+      });
+      expect(r.value1).toBe(0); // -50 floored
+      expect(r.value2).toBeCloseTo(30, 9);
+      expect(r.gap).toBeCloseTo(30, 9);
+      expect(r.laggingIs1).toBe(true);
+      // Allocation 1 must add 30 of value; pos marginal is 10/$M -> $3M.
+      expect(r.close.closed).toBe(true);
+      expect(r.close.dollars).toBeCloseTo(3, 9);
+    });
+
+    it('makes the gap zero when both scores are negative', () => {
+      const r = evaluateWorldviewRow(data, { neg: 5 }, { neg: 2 }, base, {
+        ...params,
+        floorNegativeScores: true,
+      });
+      expect(r.value1).toBe(0);
+      expect(r.value2).toBe(0);
+      expect(r.gap).toBe(0);
+      expect(r.close.dollars).toBe(0);
+    });
+
+    it('without the flag, the negative score stands and widens the gap', () => {
+      const r = evaluateWorldviewRow(data, { neg: 5 }, { pos: 3 }, base, params);
+      expect(r.value1).toBeCloseTo(-50, 9);
+      expect(r.gap).toBeCloseTo(80, 9); // |-50 - 30|
+    });
+  });
 });

@@ -179,16 +179,24 @@ export function dollarsToCloseGap(
  * lower, with diminishing returns continuing from that allocation's current
  * per-project funding.
  *
+ * With `params.floorNegativeScores`, each allocation's score is clamped to 0
+ * before the gap and catch-up are computed: a negative starting score is
+ * ignored and treated as 0, so the catch-up only measures the climb to the
+ * other (also clamped) score. If both scores are negative, both clamp to 0 and
+ * the gap is zero. The returned value1/value2 are the clamped (displayed) scores.
+ *
  * @param {Object} data - Project map (dataset.projects)
  * @param {Object} alloc1 - Allocation 1 { projectId: $M }
  * @param {Object} alloc2 - Allocation 2 { projectId: $M }
  * @param {Object} base - This worldview's base values (from computeBase, memoised)
- * @param {Object} [params] - { drStepSize, step, chunk, maxDollars }
+ * @param {Object} [params] - { drStepSize, step, chunk, maxDollars, floorNegativeScores }
  * @returns {{value1: number, value2: number, gap: number, laggingIs1: boolean, close: Object}}
  */
 export function evaluateWorldviewRow(data, alloc1, alloc2, base, params = {}) {
-  const value1 = allocationValue(data, base, alloc1, params);
-  const value2 = allocationValue(data, base, alloc2, params);
+  const raw1 = allocationValue(data, base, alloc1, params);
+  const raw2 = allocationValue(data, base, alloc2, params);
+  const value1 = params.floorNegativeScores ? Math.max(0, raw1) : raw1;
+  const value2 = params.floorNegativeScores ? Math.max(0, raw2) : raw2;
   const gap = Math.abs(value1 - value2);
   const laggingIs1 = value1 < value2;
   const laggingAlloc = laggingIs1 ? alloc1 : alloc2;

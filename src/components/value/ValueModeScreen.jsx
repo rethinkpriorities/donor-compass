@@ -64,17 +64,41 @@ function formatDollars(m) {
  * worldview — to match the other.
  */
 function ValueModeScreen() {
-  const { projectList, allocations, rows, labels, setAllocation, resetAllocations } =
-    useValueState();
+  const {
+    projectList,
+    allocations,
+    rows,
+    labels,
+    floorNegativeScores,
+    setFloorNegativeScores,
+    setAllocation,
+    resetAllocations,
+  } = useValueState();
 
   return (
     <div className={styles.container}>
       <div className={styles.inner}>
         <div className={styles.header}>
           <h1 className={styles.title}>Value Mode</h1>
-          <button className={styles.resetButton} onClick={resetAllocations}>
-            Reset allocations
-          </button>
+          <div className={styles.headerActions}>
+            <label className={styles.toggle}>
+              <input
+                type="checkbox"
+                checked={floorNegativeScores}
+                onChange={(e) => setFloorNegativeScores(e.target.checked)}
+              />
+              Floor negative scores at 0
+              <InfoTooltip
+                content={
+                  'When on, a negative allocation score is treated as 0 before computing the gap. The catch-up then measures only the climb to the other score. If both scores are negative, the gap is zero.'
+                }
+                size={13}
+              />
+            </label>
+            <button className={styles.resetButton} onClick={resetAllocations}>
+              Reset allocations
+            </button>
+          </div>
         </div>
         <p className={styles.intro}>
           Enter two allocations of dollars (in $millions) across the funds. For each worldview

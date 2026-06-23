@@ -40,9 +40,9 @@ function loadSavedState() {
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed.version !== STATE_VERSION) return null;
-    const { allocations } = parsed.state;
+    const { allocations, floorNegativeScores } = parsed.state;
     if (!Array.isArray(allocations) || allocations.length !== 2) return null;
-    return { allocations };
+    return { allocations, floorNegativeScores: !!floorNegativeScores };
   } catch {
     return null;
   }
@@ -89,18 +89,29 @@ export function useValueState() {
     );
   });
 
+  // When on, negative allocation scores are floored to 0 before the gap and
+  // catch-up are computed (see evaluateWorldviewRow).
+  const [floorNegativeScores, setFloorNegativeScores] = useState(
+    () => loadSavedState()?.floorNegativeScores ?? false
+  );
+
   // Memoise each worldview's expensive base computation by identity.
   const bases = useMemo(() => WORLDVIEW_POOL.map((wv) => computeBase(data, wv)), [data]);
 
   // Derived per-worldview rows — instant on every allocation keystroke.
+  const rowParams = useMemo(
+    () => ({ ...params, floorNegativeScores }),
+    [params, floorNegativeScores]
+  );
+
   const rows = useMemo(
     () =>
       WORLDVIEW_POOL.map((wv, i) => ({
         name: wv.name,
         worldview: wv,
-        ...evaluateWorldviewRow(data, allocations[0], allocations[1], bases[i], params),
+        ...evaluateWorldviewRow(data, allocations[0], allocations[1], bases[i], rowParams),
       })),
-    [data, allocations, bases, params]
+    [data, allocations, bases, rowParams]
   );
 
   // Dataset label metadata, for rendering the per-worldview values tooltip.
@@ -113,11 +124,11 @@ export function useValueState() {
     [dataset.moralWeightKeys, dataset.discountFactorLabels, dataset.riskProfileOptions]
   );
 
-  // Persist allocations (debounced).
+  // Persist allocations + toggle (debounced).
   useEffect(() => {
-    const t = setTimeout(() => saveState({ allocations }), 300);
+    const t = setTimeout(() => saveState({ allocations, floorNegativeScores }), 300);
     return () => clearTimeout(t);
-  }, [allocations]);
+  }, [allocations, floorNegativeScores]);
 
   const setAllocation = useCallback((colIndex, projectId, value) => {
     setAllocations((prev) => {
@@ -142,6 +153,8 @@ export function useValueState() {
     rows,
     labels,
     params,
+    floorNegativeScores,
+    setFloorNegativeScores,
     setAllocation,
     resetAllocations,
   };
