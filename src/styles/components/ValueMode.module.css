@@ -92,6 +92,12 @@
   font-weight: 400;
 }
 
+.worldviewName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .colorDot {
   display: inline-block;
   width: 0.6rem;

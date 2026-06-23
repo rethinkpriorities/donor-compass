@@ -1,6 +1,41 @@
 import { useValueState } from '../../hooks/useValueState';
 import PreciseNumberInput from '../ui/PreciseNumberInput';
+import InfoTooltip from '../ui/InfoTooltip';
 import styles from '../../styles/components/ValueMode.module.css';
+
+// Build a markdown breakdown of a worldview's exact input values for the
+// tooltip. Uses the dataset's labels so recipients/periods read in plain
+// English rather than raw keys. Bullet lists (not tables) so it renders under
+// the shared InfoTooltip's plain markdown (no remark-gfm).
+function worldviewTooltip(worldview, labels) {
+  const { moralWeightKeys, discountFactorLabels, riskProfileOptions } = labels;
+
+  const weightRows = moralWeightKeys
+    .map((k) => `- ${k.label}: **${worldview.moral_weights[k.key] ?? '—'}**`)
+    .join('\n');
+
+  const discountRows = discountFactorLabels
+    .map((label, i) => `- ${label}: **${worldview.discount_factors[i] ?? '—'}**`)
+    .join('\n');
+
+  const riskLabel = riskProfileOptions[worldview.risk_profile]?.label ?? worldview.risk_profile;
+
+  return [
+    `**${worldview.name}**`,
+    '',
+    '**Moral weights**',
+    '',
+    weightRows,
+    '',
+    '**Discount factors**',
+    '',
+    discountRows,
+    '',
+    `**Risk profile:** ${riskLabel}`,
+    '',
+    `**P(extinction):** ${worldview.p_extinction}`,
+  ].join('\n');
+}
 
 // Large, unitless worldview scores → compact notation (e.g. 1.2M, 3.4B).
 const scoreFmt = new Intl.NumberFormat('en', {
@@ -29,7 +64,8 @@ function formatDollars(m) {
  * worldview — to match the other.
  */
 function ValueModeScreen() {
-  const { projectList, allocations, rows, setAllocation, resetAllocations } = useValueState();
+  const { projectList, allocations, rows, labels, setAllocation, resetAllocations } =
+    useValueState();
 
   return (
     <div className={styles.container}>
@@ -99,7 +135,12 @@ function ValueModeScreen() {
               const lagLabel = r.laggingIs1 ? 'Allocation 1' : 'Allocation 2';
               return (
                 <tr key={i} className={styles.outputRow}>
-                  <td className={styles.rowLabel}>{r.name}</td>
+                  <td className={styles.rowLabel}>
+                    <span className={styles.worldviewName}>
+                      {r.name}
+                      <InfoTooltip content={worldviewTooltip(r.worldview, labels)} size={13} />
+                    </span>
+                  </td>
                   <td className={styles.scoreCell}>{formatScore(r.value1)}</td>
                   <td className={styles.scoreCell}>{formatScore(r.value2)}</td>
                   <td className={styles.gapCell}>{formatScore(r.gap)}</td>

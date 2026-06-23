@@ -97,9 +97,20 @@ export function useValueState() {
     () =>
       WORLDVIEW_POOL.map((wv, i) => ({
         name: wv.name,
+        worldview: wv,
         ...evaluateWorldviewRow(data, allocations[0], allocations[1], bases[i], params),
       })),
     [data, allocations, bases, params]
+  );
+
+  // Dataset label metadata, for rendering the per-worldview values tooltip.
+  const labels = useMemo(
+    () => ({
+      moralWeightKeys: dataset.moralWeightKeys ?? [],
+      discountFactorLabels: dataset.discountFactorLabels ?? [],
+      riskProfileOptions: dataset.riskProfileOptions ?? [],
+    }),
+    [dataset.moralWeightKeys, dataset.discountFactorLabels, dataset.riskProfileOptions]
   );
 
   // Persist allocations (debounced).
@@ -129,6 +140,7 @@ export function useValueState() {
     projectList,
     allocations,
     rows,
+    labels,
     params,
     setAllocation,
     resetAllocations,
