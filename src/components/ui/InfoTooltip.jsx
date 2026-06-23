@@ -17,7 +17,8 @@ import styles from '../../styles/components/InfoTooltip.module.css';
  */
 function InfoTooltip({ content, size = 14, variant = 'info' }) {
   const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: null });
+  const [placement, setPlacement] = useState('below');
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
   const wrapperRef = useRef(null);
@@ -28,12 +29,14 @@ function InfoTooltip({ content, size = 14, variant = 'info' }) {
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
     const popoverWidth = popoverRef.current?.offsetWidth || 400;
+    const popoverHeight = popoverRef.current?.offsetHeight || 0;
     const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
     const padding = 16;
+    const gap = 8;
 
-    // Center below the trigger
+    // Center horizontally on the trigger
     let left = triggerRect.left + triggerRect.width / 2 - popoverWidth / 2;
-    const top = triggerRect.bottom + 8;
 
     // Clamp to viewport bounds
     if (left < padding) {
@@ -42,7 +45,36 @@ function InfoTooltip({ content, size = 14, variant = 'info' }) {
       left = viewportWidth - popoverWidth - padding;
     }
 
-    setPosition({ top, left });
+    // Vertical placement: prefer below, flip above when it fits better. If the
+    // popover is taller than the room on either side (a long tooltip near the
+    // top or bottom), pick the roomier side and cap its height so it scrolls
+    // internally instead of running off-screen.
+    const spaceBelow = viewportHeight - triggerRect.bottom - gap - padding;
+    const spaceAbove = triggerRect.top - gap - padding;
+
+    let nextPlacement;
+    let top;
+    let maxHeight = null;
+
+    if (popoverHeight <= spaceBelow) {
+      nextPlacement = 'below';
+      top = triggerRect.bottom + gap;
+    } else if (popoverHeight <= spaceAbove) {
+      nextPlacement = 'above';
+      top = triggerRect.top - gap - popoverHeight;
+    } else if (spaceBelow >= spaceAbove) {
+      nextPlacement = 'below';
+      top = triggerRect.bottom + gap;
+      maxHeight = Math.max(spaceBelow, 0);
+    } else {
+      nextPlacement = 'above';
+      maxHeight = Math.max(spaceAbove, 0);
+      top = triggerRect.top - gap - maxHeight;
+    }
+    if (top < padding) top = padding;
+
+    setPlacement(nextPlacement);
+    setPosition({ top, left, maxHeight });
   }, []);
 
   const show = useCallback(() => {
@@ -88,12 +120,6 @@ function InfoTooltip({ content, size = 14, variant = 'info' }) {
     };
   }, [isVisible]);
 
-  useEffect(() => {
-    if (isVisible) {
-      updatePosition();
-    }
-  }, [isVisible, updatePosition]);
-
   const handleTouchStart = useCallback(
     (e) => {
       // Prevent the tap from bubbling to a parent click handler (e.g. the
@@ -138,8 +164,14 @@ function InfoTooltip({ content, size = 14, variant = 'info' }) {
       {createPortal(
         <span
           ref={popoverRef}
-          className={`${styles.popover} ${isVisible ? styles.popoverVisible : ''}`}
-          style={{ top: position.top, left: position.left }}
+          className={`${styles.popover} ${placement === 'above' ? styles.popoverAbove : ''} ${
+            isVisible ? styles.popoverVisible : ''
+          }`}
+          style={{
+            top: position.top,
+            left: position.left,
+            maxHeight: position.maxHeight ?? undefined,
+          }}
           onMouseEnter={show}
           onMouseLeave={hideSoon}
         >
