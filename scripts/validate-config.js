@@ -18,6 +18,9 @@ const projectRoot = join(__dirname, '..');
 const { validateQuestionsConfig } = await import(
   join(projectRoot, 'src/utils/validateQuestions.js')
 );
+const { validateValueModeWorldviews } = await import(
+  join(projectRoot, 'src/utils/validateValueModeWorldviews.js')
+);
 
 let hasErrors = false;
 
@@ -46,6 +49,7 @@ const questionsConfig = loadJson('questions.json');
 const featuresConfig = loadJson('features.json');
 const copyConfig = loadJson('copy.json');
 const tableModeConfig = loadJson('tableMode.json');
+const valueModeWorldviewsConfig = loadJson('valueModeWorldviews.json');
 
 // Validate questions.json structure
 if (questionsConfig) {
@@ -350,6 +354,27 @@ if (tableModeConfig && defaultDataset) {
     hasErrors = true;
   } else {
     console.log('✓ tableMode.json + dataset cross-validated successfully');
+  }
+}
+
+// Validate valueModeWorldviews.json against the default dataset's dimensions
+if (valueModeWorldviewsConfig) {
+  if (!defaultDataset) {
+    console.error('✗ valueModeWorldviews.json: no default dataset found to validate against');
+    hasErrors = true;
+  } else {
+    const errors = validateValueModeWorldviews(valueModeWorldviewsConfig, {
+      moralWeightKeys: defaultDataset.data.moralWeightKeys,
+      discountFactorLabels: defaultDataset.data.discountFactorLabels,
+      riskProfileOptions: defaultDataset.data.riskProfileOptions,
+    });
+    if (errors.length > 0) {
+      console.error('✗ valueModeWorldviews.json validation failed:');
+      errors.forEach((e) => console.error(`  ${e}`));
+      hasErrors = true;
+    } else {
+      console.log('✓ valueModeWorldviews.json validated successfully');
+    }
   }
 }
 

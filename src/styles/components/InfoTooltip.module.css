@@ -47,6 +47,9 @@
   z-index: 999;
   width: max-content;
   max-width: min(600px, calc(100vw - 2rem));
+  /* When a tall tooltip can't fit above or below the trigger, JS caps its
+     height via inline max-height; scroll the overflow instead of clipping. */
+  overflow-y: auto;
   padding: 1rem 1.25rem;
   background: #1a2a3a;
   color: #ffffff;
@@ -74,6 +77,12 @@
   left: 0;
   right: 0;
   height: 12px;
+}
+
+/* When flipped above the trigger, the bridge belongs at the bottom edge. */
+.popoverAbove::before {
+  top: auto;
+  bottom: -12px;
 }
 
 .popoverVisible {
