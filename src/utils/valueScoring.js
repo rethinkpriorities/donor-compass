@@ -170,22 +170,28 @@ export function dollarsToCloseGap(
 }
 
 /**
- * Full per-column output: both worldviews' scores, their gap, which one lags,
- * and the dollars the lagging worldview needs to catch up.
+ * Full per-worldview output row: how one worldview values each of the two
+ * allocations, the gap between those two scores, which allocation lags, and the
+ * dollars that lagging allocation would need — allocated greedily by this same
+ * worldview — to match the other allocation's score.
+ *
+ * The catch-up dollars are added to whichever allocation this worldview scores
+ * lower, with diminishing returns continuing from that allocation's current
+ * per-project funding.
  *
  * @param {Object} data - Project map (dataset.projects)
- * @param {Object} allocation - { projectId: $M }
- * @param {Object} baseA - Worldview A base values (from computeBase, memoised)
- * @param {Object} baseB - Worldview B base values (from computeBase, memoised)
+ * @param {Object} alloc1 - Allocation 1 { projectId: $M }
+ * @param {Object} alloc2 - Allocation 2 { projectId: $M }
+ * @param {Object} base - This worldview's base values (from computeBase, memoised)
  * @param {Object} [params] - { drStepSize, step, chunk, maxDollars }
- * @returns {{valueA: number, valueB: number, gap: number, laggingIsA: boolean, close: Object}}
+ * @returns {{value1: number, value2: number, gap: number, laggingIs1: boolean, close: Object}}
  */
-export function evaluateColumn(data, allocation, baseA, baseB, params = {}) {
-  const valueA = allocationValue(data, baseA, allocation, params);
-  const valueB = allocationValue(data, baseB, allocation, params);
-  const gap = Math.abs(valueA - valueB);
-  const laggingIsA = valueA < valueB;
-  const laggingBase = laggingIsA ? baseA : baseB;
-  const close = dollarsToCloseGap(data, laggingBase, allocation, gap, params);
-  return { valueA, valueB, gap, laggingIsA, close };
+export function evaluateWorldviewRow(data, alloc1, alloc2, base, params = {}) {
+  const value1 = allocationValue(data, base, alloc1, params);
+  const value2 = allocationValue(data, base, alloc2, params);
+  const gap = Math.abs(value1 - value2);
+  const laggingIs1 = value1 < value2;
+  const laggingAlloc = laggingIs1 ? alloc1 : alloc2;
+  const close = dollarsToCloseGap(data, base, laggingAlloc, gap, params);
+  return { value1, value2, gap, laggingIs1, close };
 }

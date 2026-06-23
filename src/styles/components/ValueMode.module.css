@@ -1,4 +1,4 @@
-/* Value Mode (#value) — allocation columns scored by two fixed worldviews. */
+/* Value Mode (#value) — two allocations, each scored by every worldview. */
 
 .container {
   min-height: 100vh;
@@ -28,21 +28,11 @@
   margin: 0;
 }
 
-.datasetName {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
 .intro {
   font-size: 0.85rem;
   opacity: 0.8;
   margin: 0 0 var(--spacing-4);
   line-height: 1.5;
-}
-
-.headerActions {
-  display: flex;
-  gap: var(--spacing-2);
 }
 
 .resetButton {
@@ -58,39 +48,9 @@
   background: var(--overlay-strong, rgba(255, 255, 255, 0.12));
 }
 
-/* Worldview legend */
-.legend {
-  display: flex;
-  gap: var(--spacing-4);
-  flex-wrap: wrap;
-  margin-bottom: var(--spacing-4);
-  font-size: 0.8rem;
-}
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.legendChip {
-  font-weight: 700;
-  width: 1.4rem;
-  height: 1.4rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.3rem;
-  background: var(--overlay-strong, rgba(255, 255, 255, 0.12));
-}
-
-/* Horizontal scroll for many allocation columns */
-.scroll {
-  overflow-x: auto;
-}
-
 /* Grid */
 .grid {
   width: 100%;
-  min-width: max-content;
   border-collapse: collapse;
   background: var(--overlay-subtle);
   border: 1px solid var(--border-subtle);
@@ -106,7 +66,8 @@
   font-size: 0.85rem;
 }
 
-.grid thead th {
+.grid thead th,
+.outputHeader th {
   text-align: right;
   font-weight: 700;
   background: var(--overlay-strong, rgba(255, 255, 255, 0.08));
@@ -116,31 +77,13 @@
   text-align: left !important;
   font-weight: 500;
   white-space: nowrap;
-  position: sticky;
-  left: 0;
-  background: var(--overlay-subtle);
-  z-index: 1;
 }
 
-.colHead {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.4rem;
-}
-
-.removeCol {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  opacity: 0.5;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0 0.2rem;
-}
-.removeCol:hover {
-  opacity: 1;
+/* The two trailing analysis columns (Gap, $ to close) are blank in the input
+   section; keep them visually quiet there. */
+.analysisCol {
+  background: transparent;
+  border-bottom: none;
 }
 
 .colUnit {
@@ -182,14 +125,15 @@
 
 .outputRow td {
   background: var(--overlay-strong, rgba(255, 255, 255, 0.04));
-}
-.scoreRow td {
   font-variant-numeric: tabular-nums;
 }
-.gapRow td {
+.scoreCell {
+  font-variant-numeric: tabular-nums;
+}
+.gapCell {
   font-weight: 600;
 }
-.dollarRow td {
+.dollarCell {
   font-weight: 700;
 }
 .dollarValue {

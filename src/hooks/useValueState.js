@@ -1,24 +1,14 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDataset } from '../context/DatasetContext';
-import { computeBase, evaluateColumn } from '../utils/valueScoring';
+import { computeBase, evaluateWorldviewRow } from '../utils/valueScoring';
 import worldviewPresets from '../../config/worldviewPresets.json';
 
 const STORAGE_KEY = 'value_state';
-const STATE_VERSION = 2;
+const STATE_VERSION = 3;
 
-// Worldviews seeded into the two scorer slots. longtermist is deliberately one
-// of them: it scores the x-risk funds hugely negative (so an even split goes
-// negative — an unsurmountable gap) and its best positive fund is modest (so
-// catch-up costs real, visible dollars rather than closing instantly).
-const DEFAULT_WORLDVIEW_IDS = ['human_focused', 'longtermist'];
-
-// Pool of worldviews the two scorers can be chosen from. For now this is the
-// preset list; a future selector will let the user swap either slot by id.
+// Worldviews shown as rows. For now this is the full preset pool; a future
+// selector can let the user choose which worldviews appear.
 const WORLDVIEW_POOL = worldviewPresets.presets;
-
-function resolveWorldview(id) {
-  return WORLDVIEW_POOL.find((w) => w.id === id) ?? WORLDVIEW_POOL[0];
-}
 
 // Non-DR-derived calc defaults. drStepSize comes from the dataset; the rest are
 // the tunables a future debugger panel would override (kept here so nothing is a
@@ -26,11 +16,12 @@ function resolveWorldview(id) {
 const DEFAULT_PARAMS = { step: 1, chunk: 1, maxDollars: 4000 };
 
 /**
- * Seed three contrasting allocations so the grid shows the full range of
- * behaviours on first load (with the default human_focused × longtermist pair):
- *   - Even split: drags longtermist negative → unsurmountable gap (N/A).
- *   - All on GiveWell: a large but surmountable gap (~$442M).
- *   - All on LEAF: a smaller surmountable gap (~$82M).
+ * Seed two contrasting allocations so the grid shows live numbers on first
+ * load:
+ *   - Allocation 1: the dataset budget spread evenly across all projects.
+ *   - Allocation 2: the whole budget on the first project.
+ * The two diverge enough that most worldviews value them quite differently,
+ * exercising both the surmountable and unsurmountable (N/A) gap cases.
  */
 function buildDefaultAllocations(projectIds, budget) {
   const even = {};
@@ -38,13 +29,8 @@ function buildDefaultAllocations(projectIds, budget) {
   for (const id of projectIds) even[id] = perProject;
 
   const onFirst = { [projectIds[0]]: budget };
-  const onLast = { [projectIds[projectIds.length - 1]]: budget };
 
-  return [even, onFirst, onLast];
-}
-
-function emptyAllocation() {
-  return {};
+  return [even, onFirst];
 }
 
 function loadSavedState() {
@@ -53,9 +39,9 @@ function loadSavedState() {
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed.version !== STATE_VERSION) return null;
-    const { allocations, selectedWorldviewIds } = parsed.state;
-    if (!Array.isArray(allocations) || allocations.length < 1) return null;
-    return { allocations, selectedWorldviewIds };
+    const { allocations } = parsed.state;
+    if (!Array.isArray(allocations) || allocations.length !== 2) return null;
+    return { allocations };
   } catch {
     return null;
   }
@@ -72,10 +58,12 @@ function saveState(state) {
 /**
  * State + derived results for value mode (#value).
  *
- * Holds two allocation columns and two selected worldviews; everything else is
- * derived. Per-worldview base values are memoised by identity so typing in an
- * allocation never recomputes a base, and results flow straight from a useMemo
- * (no recalculate button).
+ * Holds exactly two allocation columns; everything else is derived. Each
+ * worldview in the pool becomes an output row comparing how it values the two
+ * allocations (scores, gap, and the dollars the lagging allocation needs to
+ * catch up). Per-worldview base values are memoised so typing in an allocation
+ * never recomputes a base, and results flow straight from a useMemo (no
+ * recalculate button).
  */
 export function useValueState() {
   const { dataset } = useDataset();
@@ -100,32 +88,24 @@ export function useValueState() {
     );
   });
 
-  const [selectedWorldviewIds, setSelectedWorldviewIds] = useState(() => {
-    const saved = loadSavedState();
-    if (saved?.selectedWorldviewIds?.length === 2) return saved.selectedWorldviewIds;
-    return DEFAULT_WORLDVIEW_IDS.map((id) => resolveWorldview(id).id);
-  });
+  // Memoise each worldview's expensive base computation by identity.
+  const bases = useMemo(() => WORLDVIEW_POOL.map((wv) => computeBase(data, wv)), [data]);
 
-  const worldviews = useMemo(
-    () => selectedWorldviewIds.map(resolveWorldview),
-    [selectedWorldviewIds]
+  // Derived per-worldview rows — instant on every allocation keystroke.
+  const rows = useMemo(
+    () =>
+      WORLDVIEW_POOL.map((wv, i) => ({
+        name: wv.name,
+        ...evaluateWorldviewRow(data, allocations[0], allocations[1], bases[i], params),
+      })),
+    [data, allocations, bases, params]
   );
 
-  // Memoise the expensive base computation per worldview identity.
-  const baseA = useMemo(() => computeBase(data, worldviews[0]), [data, worldviews]);
-  const baseB = useMemo(() => computeBase(data, worldviews[1]), [data, worldviews]);
-
-  // Derived per-column results — instant on every allocation keystroke.
-  const columns = useMemo(
-    () => allocations.map((alloc) => evaluateColumn(data, alloc, baseA, baseB, params)),
-    [data, allocations, baseA, baseB, params]
-  );
-
-  // Persist allocations + worldview selection (debounced).
+  // Persist allocations (debounced).
   useEffect(() => {
-    const t = setTimeout(() => saveState({ allocations, selectedWorldviewIds }), 300);
+    const t = setTimeout(() => saveState({ allocations }), 300);
     return () => clearTimeout(t);
-  }, [allocations, selectedWorldviewIds]);
+  }, [allocations]);
 
   const setAllocation = useCallback((colIndex, projectId, value) => {
     setAllocations((prev) => {
@@ -133,22 +113,6 @@ export function useValueState() {
       next[colIndex][projectId] = value;
       return next;
     });
-  }, []);
-
-  const setWorldview = useCallback((slot, id) => {
-    setSelectedWorldviewIds((prev) => {
-      const next = [...prev];
-      next[slot] = id;
-      return next;
-    });
-  }, []);
-
-  const addAllocation = useCallback(() => {
-    setAllocations((prev) => [...prev, emptyAllocation()]);
-  }, []);
-
-  const removeAllocation = useCallback((colIndex) => {
-    setAllocations((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== colIndex)));
   }, []);
 
   const resetAllocations = useCallback(() => {
@@ -163,15 +127,9 @@ export function useValueState() {
   return {
     projectList,
     allocations,
-    columns,
-    worldviews,
-    worldviewOptions: WORLDVIEW_POOL.map((w) => ({ id: w.id, name: w.name })),
-    selectedWorldviewIds,
+    rows,
     params,
     setAllocation,
-    setWorldview,
-    addAllocation,
-    removeAllocation,
     resetAllocations,
   };
 }

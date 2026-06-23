@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { computeBase, allocationValue, dollarsToCloseGap, evaluateColumn } from './valueScoring';
+import {
+  computeBase,
+  allocationValue,
+  dollarsToCloseGap,
+  evaluateWorldviewRow,
+} from './valueScoring';
 
 // --- Synthetic dataset helpers -------------------------------------------
 // A project whose single effect contributes `valueAtT0` (times moral weight,
@@ -125,20 +130,30 @@ describe('dollarsToCloseGap', () => {
   });
 });
 
-describe('evaluateColumn', () => {
-  it('identifies the lagging worldview and the dollars to catch up', () => {
-    const data = { p1: makeProject(10, [1, 1, 1, 1, 1, 1]) };
-    const baseA = computeBase(data, worldview(2)); // generous: base 20
-    const baseB = computeBase(data, worldview(1)); // stingy: base 10
+describe('evaluateWorldviewRow', () => {
+  it('compares the two allocations under one worldview and finds the catch-up dollars', () => {
+    const data = { p1: makeProject(10, [1, 1, 1, 1, 1, 1]) }; // flat DR
+    const base = computeBase(data, worldview(2)); // base 20, marginal 20/$M
     const params = { drStepSize: 1, step: 1, chunk: 1, maxDollars: 1000 };
-    const r = evaluateColumn(data, { p1: 5 }, baseA, baseB, params);
+    // Allocation 1 funds $3M, Allocation 2 funds $5M of the same project.
+    const r = evaluateWorldviewRow(data, { p1: 3 }, { p1: 5 }, base, params);
 
-    expect(r.valueA).toBeCloseTo(100, 9); // 20 * 5
-    expect(r.valueB).toBeCloseTo(50, 9); // 10 * 5
-    expect(r.gap).toBeCloseTo(50, 9);
-    expect(r.laggingIsA).toBe(false); // B lags
-    // B's marginal is 10/$M, so 50 value needs 5 more dollars.
+    expect(r.value1).toBeCloseTo(60, 9); // 20 * 3
+    expect(r.value2).toBeCloseTo(100, 9); // 20 * 5
+    expect(r.gap).toBeCloseTo(40, 9);
+    expect(r.laggingIs1).toBe(true); // Allocation 1 scores lower
+    // Marginal 20/$M, so closing a 40 gap needs 2 more dollars on allocation 1.
     expect(r.close.closed).toBe(true);
-    expect(r.close.dollars).toBeCloseTo(5, 9);
+    expect(r.close.dollars).toBeCloseTo(2, 9);
+  });
+
+  it('reports N/A when the lagging allocation cannot catch up within the cap', () => {
+    const data = { p1: makeProject(10, [1, 1, 1, 1, 1, 1]) };
+    const base = computeBase(data, worldview(1)); // marginal 10/$M
+    const params = { drStepSize: 1, step: 1, chunk: 1, maxDollars: 3 };
+    const r = evaluateWorldviewRow(data, {}, { p1: 5 }, base, params);
+    // Gap is 50; at 10/$M the cap of $3M only adds 30 — unclosable.
+    expect(r.gap).toBeCloseTo(50, 9);
+    expect(r.close.closed).toBe(false);
   });
 });
