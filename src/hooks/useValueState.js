@@ -16,22 +16,49 @@ const WORLDVIEW_POOL = valueModeWorldviews.worldviews;
 // magic number buried in valueScoring.js).
 const DEFAULT_PARAMS = { step: 1, chunk: 1, maxDollars: 4000 };
 
+// The two seed allocation columns, configured in valueModeWorldviews.json so
+// the numbers can be edited without touching this hook (see that file's
+// `defaultAllocations.description`).
+const DEFAULT_ALLOCATIONS = valueModeWorldviews.defaultAllocations?.columns ?? [];
+
+// Built-in fallbacks, used per-column when the config column is missing or its
+// weights reference no project id present in the active dataset.
+function fallbackColumn(index, projectIds, budget) {
+  if (index === 0) {
+    const even = {};
+    const perProject = budget / projectIds.length;
+    for (const id of projectIds) even[id] = perProject;
+    return even;
+  }
+  return { [projectIds[0]]: budget };
+}
+
+// Turn one config column's fractional weights into dollar amounts for the
+// active dataset's projects. Returns null if no weight matches, so the caller
+// can fall back.
+function columnFromWeights(weights, projectIds, budget) {
+  if (!weights) return null;
+  const matched = projectIds.filter((id) => id in weights);
+  if (matched.length === 0) return null;
+  const col = {};
+  for (const id of matched) col[id] = budget * weights[id];
+  return col;
+}
+
 /**
  * Seed two contrasting allocations so the grid shows live numbers on first
- * load:
- *   - Allocation 1: the dataset budget spread evenly across all projects.
+ * load (and on reset). The numbers come from valueModeWorldviews.json's
+ * `defaultAllocations`; by default that's:
+ *   - Allocation 1: RP's recommended split of the budget across the funds.
  *   - Allocation 2: the whole budget on the first project.
  * The two diverge enough that most worldviews value them quite differently,
  * exercising both the surmountable and unsurmountable (N/A) gap cases.
  */
 function buildDefaultAllocations(projectIds, budget) {
-  const even = {};
-  const perProject = budget / projectIds.length;
-  for (const id of projectIds) even[id] = perProject;
-
-  const onFirst = { [projectIds[0]]: budget };
-
-  return [even, onFirst];
+  return [0, 1].map((index) => {
+    const configured = columnFromWeights(DEFAULT_ALLOCATIONS[index]?.weights, projectIds, budget);
+    return configured ?? fallbackColumn(index, projectIds, budget);
+  });
 }
 
 function loadSavedState() {

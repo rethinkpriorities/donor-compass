@@ -1,5 +1,29 @@
 {
   "description": "Worldviews shown as rows in value mode (#value). This is a MODE-SPECIFIC copy, intentionally decoupled from worldviewPresets.json and tableMode.json so it can be edited independently. Seeded 2026-06-22 to match those sources; keeping them in sync afterwards is not a dev responsibility. Value mode scores each worldview independently, so no `credence` field is needed here.",
+  "defaultAllocations": {
+    "description": "The two allocation columns value mode seeds on first load (and restores on reset). Each entry's `weights` are fractions of the dataset budget keyed by project id; the hook multiplies them by the active dataset's budget. Ids absent from a column default to 0. If a column's weights reference no ids present in the active dataset, the hook falls back to a built-in default (even spread for column 1, whole budget on the first project for column 2).",
+    "columns": [
+      {
+        "label": "RP recommended split",
+        "weights": {
+          "givewell": 0.13,
+          "leaf": 0.05,
+          "ea_awf": 0.13,
+          "navigation_fund_general": 0.17,
+          "navigation_fund_cagefree": 0.16,
+          "sentinel_bio": 0.09,
+          "longview_nuclear": 0.04,
+          "longview_ai": 0.23
+        }
+      },
+      {
+        "label": "Concentrated on GiveWell",
+        "weights": {
+          "givewell": 1.0
+        }
+      }
+    ]
+  },
   "worldviews": [
     {
       "id": "human_focused",
