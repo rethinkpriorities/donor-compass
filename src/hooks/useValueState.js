@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useDataset } from '../context/DatasetContext';
 import { computeBase, evaluateWorldviewRow } from '../utils/valueScoring';
-import worldviewPresets from '../../config/worldviewPresets.json';
+import valueModeWorldviews from '../../config/valueModeWorldviews.json';
 
 const STORAGE_KEY = 'value_state';
 const STATE_VERSION = 3;
 
-// Worldviews shown as rows. For now this is the full preset pool; a future
-// selector can let the user choose which worldviews appear.
-const WORLDVIEW_POOL = worldviewPresets.presets;
+// Worldviews shown as rows. Sourced from a mode-specific config file so they can
+// be edited independently of the quiz/table presets — discrepancies between
+// this file and the others are intentional and not a dev concern.
+const WORLDVIEW_POOL = valueModeWorldviews.worldviews;
 
 // Non-DR-derived calc defaults. drStepSize comes from the dataset; the rest are
 // the tunables a future debugger panel would override (kept here so nothing is a

@@ -1,0 +1,124 @@
+{
+  "description": "Worldviews shown as rows in value mode (#value). This is a MODE-SPECIFIC copy, intentionally decoupled from worldviewPresets.json and tableMode.json so it can be edited independently. Seeded 2026-06-22 to match those sources; keeping them in sync afterwards is not a dev responsibility. Value mode scores each worldview independently, so no `credence` field is needed here.",
+  "worldviews": [
+    {
+      "id": "human_focused",
+      "name": "Human-focused, near-term optimist",
+      "moral_weights": {
+        "human_life_years": 1.0,
+        "human_ylds": 0.5,
+        "human_income_doublings": 0.2,
+        "chickens_birds": 0.01,
+        "fish": 0.005,
+        "shrimp": 0.0001,
+        "non_shrimp_invertebrates": 0.00005,
+        "mammals": 0.05
+      },
+      "discount_factors": [1.0, 0.9, 0.5, 0.2, 0.05, 0.01],
+      "risk_profile": 0,
+      "p_extinction": 0.1
+    },
+    {
+      "id": "animal_welfare",
+      "name": "Animal welfare prioritizer",
+      "moral_weights": {
+        "human_life_years": 1.0,
+        "human_ylds": 0.8,
+        "human_income_doublings": 0.1,
+        "chickens_birds": 0.5,
+        "fish": 0.3,
+        "shrimp": 0.05,
+        "non_shrimp_invertebrates": 0.01,
+        "mammals": 0.8
+      },
+      "discount_factors": [1.0, 0.8, 0.4, 0.15, 0.03, 0.005],
+      "risk_profile": 1,
+      "p_extinction": 0.05
+    },
+    {
+      "id": "longtermist",
+      "name": "Longtermist with high extinction concern",
+      "moral_weights": {
+        "human_life_years": 1.0,
+        "human_ylds": 0.3,
+        "human_income_doublings": 0.05,
+        "chickens_birds": 0.001,
+        "fish": 0.0005,
+        "shrimp": 0.00001,
+        "non_shrimp_invertebrates": 0.000005,
+        "mammals": 0.01
+      },
+      "discount_factors": [1.0, 1.0, 0.9, 0.7, 0.5, 0.3],
+      "risk_profile": 2,
+      "p_extinction": 0.5
+    },
+    {
+      "id": "total_utilitarian",
+      "name": "Total Utilitarian",
+      "moral_weights": {
+        "human_life_years": 1,
+        "human_ylds": 1,
+        "human_income_doublings": 0.3,
+        "chickens_birds": 0.4,
+        "fish": 0.24,
+        "shrimp": 0.08,
+        "non_shrimp_invertebrates": 0.07,
+        "mammals": 0.44
+      },
+      "discount_factors": [1, 0.9, 0.8, 0.6, 0.4, 0.01],
+      "risk_profile": 0,
+      "p_extinction": 0
+    },
+    {
+      "id": "kantianism",
+      "name": "Kantianism",
+      "moral_weights": {
+        "human_life_years": 1,
+        "human_ylds": 0.5,
+        "human_income_doublings": 0.5,
+        "chickens_birds": 0.05,
+        "fish": 0.01,
+        "shrimp": 0.001,
+        "non_shrimp_invertebrates": 0.001,
+        "mammals": 0.05
+      },
+      "discount_factors": [1, 1, 0.5, 0.1, 0.001, 0.00001],
+      "risk_profile": 3,
+      "p_extinction": 0
+    },
+    {
+      "id": "non_util_consequentialism",
+      "name": "Consequentialism (Non-Utilitarian)",
+      "moral_weights": {
+        "human_life_years": 1,
+        "human_ylds": 1,
+        "human_income_doublings": 1,
+        "chickens_birds": 0.1,
+        "fish": 0.06,
+        "shrimp": 0.02,
+        "non_shrimp_invertebrates": 0.02,
+        "mammals": 0.11
+      },
+      "discount_factors": [1, 0.9, 0.8, 0.6, 0.4, 0.01],
+      "risk_profile": 0,
+      "p_extinction": 0
+    },
+    {
+      "id": "contractualism",
+      "name": "Contractualism",
+      "moral_weights": {
+        "human_life_years": 1,
+        "human_ylds": 0.01,
+        "human_income_doublings": 0.001,
+        "chickens_birds": 0.004,
+        "fish": 0.002,
+        "shrimp": 0.0016,
+        "non_shrimp_invertebrates": 0.0014,
+        "mammals": 0.0044
+      },
+      "discount_factors": [1, 1, 0.5, 0.1, 0.001, 0.00001],
+      "risk_profile": 3,
+      "p_extinction": 0
+    }
+  ]
+}
