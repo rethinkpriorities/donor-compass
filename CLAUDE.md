@@ -281,6 +281,7 @@ Summary of implemented features. See `docs/CLAUDE-ARCHIVE.md` for detailed imple
 | Donation Page | N/A (hash route) | Donation intent form at `#donate`. Config-driven copy, Lambda backend. See below. |
 | Data Export | `ui.exportPage` | Admin page at `#export` to download donations + shares + email signups as a zipped CSV bundle, filtered by date range. API key auth. See below. |
 | Email Capture | `ui.emailCapture` | Modal popup on results screen prompting for email; saves to DB, exposed via export. See below. |
+| Value Mode | N/A (hash route `#value`) | Score two fixed dollar allocations against a fixed pool of worldviews: per-worldview value of each allocation, the gap, and dollars to close it. See below. |
 
 ### Simple Quiz
 
@@ -484,6 +485,57 @@ aws lambda update-function-code \
 | `src/styles/components/EmailCaptureModal.module.css` | Styling |
 | `src/utils/emailSignup.js` | localStorage helpers + submit function (no-op in local dev) |
 
+### Value Mode
+
+**Route:** `#value` (hash-based, like `#table` / `#donate`). No feature flag — reachable by anyone who navigates to the hash.
+
+The **inverse** of the quiz/table modes. Instead of deriving a recommended *allocation* from worldview credences, Value Mode takes **two fixed dollar allocations** the user types in and scores them against a **fixed pool of worldviews**. There is no credence weighting — each worldview is evaluated independently (its config has no `credence` field).
+
+**What it shows.** Two input columns (dollars in $M per fund) at the top. Below, one output row per worldview with four numbers:
+- **Allocation 1 / Allocation 2 score** — total value of that allocation under this worldview (diminishing-returns-weighted integral of the marginal-value curve).
+- **Gap** — **signed `value1 − value2`** (positive when allocation 1 leads, negative when it trails). RP found an always-positive gap confusing, so the sign now carries the direction.
+- **$ to close gap** — extra dollars the *lagging* allocation would need — allocated greedily, each dollar to the fund this worldview values most at the margin — to match the other allocation's score. **Signed to match the gap**: negative when allocation 1 is the one catching up. The sign replaces the old "Allocation N lags" copy. Shows `N/A` if unclosable within the `maxDollars` cap (4000), `—` if the gap is ~0. The underlying catch-up calc is unchanged — it works on the gap's magnitude and always funds the lower-scoring allocation; only the displayed sign is new.
+
+A **"Total (all worldviews)" row** closes the table: each allocation's score summed across every worldview, and a gap as the **signed difference of those two totals** (`Σvalue1 − Σvalue2`, in `useValueState.js`'s `totals` memo). Because the per-row gaps are now signed, this equals the sum of the per-row gaps exactly (the "same number two ways" the spec expected — signed gaps don't have the absolute-value over-counting the old version did). The totals row has no $-to-close-gap figure.
+
+**Scoring model (`valueScoring.js`, all pure & parameterised):**
+- `computeBase(data, worldview)` — per-project base value (moral weights × discount × risk × extinction adjustment). The expensive part; memoised per worldview identity in the hook so typing never recomputes it. Built on `projectScoring.js` primitives (`calculateAllProjects`, `adjustForExtinctionRisk`, `getDiminishingReturnsFactor`).
+- `marginalValue(...)` — value of the next dollar into one fund at a given funding level. **Single source of the marginal curve** — both the integral and the greedy fill go through it; edit here to change the heuristic.
+- `allocationValue(...)` — total value of an allocation: a left-Riemann sum walking each fund's funding in `step`-sized chunks. Mirrors the reference Python `worldview_value`.
+- `dollarsToCloseGap(...)` — greedy "water-fill" from the lagging allocation's *current* funding (DR does not reset). Walks in `chunk`-sized steps, interpolates the final partial chunk for an exact dollar figure. Returns `{closed, dollars, valueAdded, shortfall}`; gives up at `maxDollars`.
+- `evaluateWorldviewRow(...)` — orchestrates the above into a row; applies the floor toggle here.
+
+**State (`src/hooks/useValueState.js`):** The real state is `allocations` (exactly two columns `{ projectId: $M }`), the `floorNegativeScores` toggle, and `worldviewOverride` (an imported worldview set, or null for the config default). Everything else (`rows`, `bases`) is derived via `useMemo` off the active pool (`worldviewOverride ?? config pool`); results update live on every keystroke, no recalculate button. All three persist to `sessionStorage` key `value_state` (version 4), debounced 300ms. Calc tunables live in `DEFAULT_PARAMS = { step: 1, chunk: 1, maxDollars: 4000 }` plus `drStepSize` from the dataset (kept here, not as magic numbers in the scoring file, so a future debugger panel could override them). Consumes the dataset (projects, budget, DR step, label metadata) via `DatasetContext` / `useDataset`.
+
+**Floor negative scores at 0** (commit `494c300`): a checkbox in the header. When on, each allocation's raw score is clamped via `Math.max(0, raw)` **before** the gap and catch-up are computed — a negative score is treated as 0, so catch-up only measures the climb to the other (also clamped) score; if both are negative the gap is zero. The clamped values are what render. Persisted alongside `allocations`.
+
+**Seed allocations / "RP recommended split"** (commit `f5ddba6`): the two starting columns live in `config/valueModeWorldviews.json` → `defaultAllocations.columns` as **fractional weights keyed by project id**, not in the hook. The hook (`columnFromWeights`, `buildDefaultAllocations`) multiplies each weight by `dataset.budget` (default 400). Both columns' weights sum to 0.5, so each seeds **$200M** at the default budget. Column 1 = "RP recommended split" (spread across the funds), column 2 = "Concentrated on GiveWell" (`givewell` 0.5). If a configured column references no project id in the active dataset, the hook **falls back** to a built-in default (even spread / whole budget on the first fund — note the fallbacks still use the full budget, not $200M). Same defaults restore on "Reset allocations".
+
+**Worldview pool:** `config/valueModeWorldviews.json` → `worldviews` (currently 7: human-focused, animal-welfare, longtermist, total-utilitarian, Kantian, non-util consequentialist, contractualist). This is a **mode-specific copy**, intentionally decoupled from `worldviewPresets.json` / `tableMode.json` — it was seeded from those on 2026-06-22 and keeping them in sync afterward is **not** a dev responsibility. The InfoTooltip on each row builds a markdown breakdown of that worldview's exact inputs (moral weights, discount factors, risk profile, P(extinction)) using the dataset's label metadata.
+
+**Importing worldviews from a share link:** The header's "Load worldviews from share link" button opens a modal where the user pastes a **Table Mode share link** (or just its code) — e.g. `https://…/#table&s=Q1CB7fp`. The worldview rows are then **replaced** by the worldviews saved at that link. This resolves through the *same* share API table mode uses (`fetchTableShareById` in `tableShareUrl.js`), so it needs the share Lambda reachable (`netlify dev` locally, or prod). Flow: `importWorldviewsFromShare` (`valueWorldviewImport.js`) → `extractTableShareId` (accepts full URL / `#table&s=…` hash / bare code) → `fetchTableShareById` → keep only worldviews with the four fields value mode reads, normalize to value-mode shape. **Table-mode and value-mode worldviews are the same shape** (`moral_weights`, `discount_factors`, `risk_profile`, `p_extinction`, `name`), so no field translation is needed; extras like `uid`/`presetId`/`credence` are dropped (value mode ignores credence). **Duplicate names are kept as-is** — RP links deliberately carry several near-identical columns under one name, and each becomes its own row. The override persists in `sessionStorage` (survives reload, nothing harder — not shareable). A banner with "Restore default worldviews" reverts to the config pool. Caveat: a share link from a *different dataset* (different moral-weight keys / discount-factor count) may score oddly, since value mode runs on the default dataset; it won't crash.
+
+**Config validation:** `src/utils/validateValueModeWorldviews.js` runs in `scripts/validate-config.js` (CI) against the default dataset and fails the build on structurally bad edits (tested in `validateValueModeWorldviews.test.js`). Note this validates the *config file only* — runtime-imported share sets bypass it and get a lighter usable-fields check in `valueWorldviewImport.js`.
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `src/components/value/ValueModeScreen.jsx` | The screen: two-column input grid, per-worldview output rows, floor toggle, reset, worldview tooltip builder, score/dollar formatters |
+| `src/hooks/useValueState.js` | State hook: two allocation columns + floor toggle, seed/reset defaults, memoised bases, derived rows, sessionStorage persistence |
+| `src/utils/valueScoring.js` | Pure scoring engine: `computeBase`, `marginalValue`, `allocationValue`, `dollarsToCloseGap`, `evaluateWorldviewRow` |
+| `src/components/value/LoadWorldviewsModal.jsx` | Modal to import worldviews from a Table Mode share link/code |
+| `src/styles/components/LoadWorldviewsModal.module.css` | Styling for the import modal |
+| `src/utils/valueWorldviewImport.js` | `importWorldviewsFromShare` — resolve a share link → value-mode worldview set |
+| `src/utils/tableShareUrl.js` | `extractTableShareId` + `fetchTableShareById` (shared by table mode and the value-mode importer) |
+| `src/utils/projectScoring.js` | Lower-level scoring primitives reused by valueScoring (shared with simple quiz) |
+| `config/valueModeWorldviews.json` | Worldview pool + `defaultAllocations.columns` (the two seed allocations) |
+| `src/utils/validateValueModeWorldviews.js` | Strict structural/cross-dataset validator (runs in CI) |
+| `src/utils/validateValueModeWorldviews.test.js` | Tests for the validator |
+| `src/styles/components/ValueMode.module.css` | All styling |
+| `src/components/MoralParliamentQuiz.jsx` | Router: reads `#value` hash, renders `<ValueModeScreen/>` |
+| `src/context/DatasetContext.jsx` | Supplies projects, budget, DR step size, label metadata |
+
 ### Key Architecture Notes
 - **State management**: React Context in `src/context/QuizContext.jsx`
 - **Questions**: `config/questions.json` with `worldviewDimension` for calculations
@@ -606,3 +658,8 @@ Computes recommended donation allocation by aggregating across multiple worldvie
 | `lambda/export/` | Data export Lambda (auth, query, zip CSVs) |
 | `netlify/functions/export.js` | Data export local dev mirror |
 | `src/components/export/ExportPage.jsx` | Data export admin page UI |
+| `src/components/value/ValueModeScreen.jsx` | Value Mode (`#value`) screen |
+| `src/hooks/useValueState.js` | Value Mode state hook (allocations, floor toggle, derived rows) |
+| `src/utils/valueScoring.js` | Value Mode scoring engine (pure functions) |
+| `config/valueModeWorldviews.json` | Value Mode worldview pool + seed allocations |
+| `src/context/DatasetContext.jsx` | Dataset provider (projects, budget, DR step, labels) |

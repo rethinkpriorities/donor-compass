@@ -14,7 +14,7 @@ An interactive tool to help you allocate resources across different causes based
 - Calculating which charitable funds best match those preferences
 - Allowing real-time adjustment and exploration of how different inputs affect recommendations
 
-The tool has two modes:
+The tool has three modes:
 
 ### Simple Quiz (Default)
 
@@ -32,6 +32,22 @@ Each question offers preset options plus custom inputs via "More options". From 
 A power-user interface for configuring multiple worldviews with full control over moral weights, discount factors, risk profiles, and extinction risk. Supports multiple voting methods (credence-weighted parliament, MEC, Borda count, and more) with configurable multi-stage budget allocation.
 
 Access via the "Go to Advanced Mode" button on the simple quiz results screen, or directly at `#table`.
+
+### Value Mode
+
+The **inverse** of the other two modes. Rather than deriving a recommended allocation from your worldview, Value Mode takes **two fixed dollar allocations** you type in (in $M across the funds) and scores them against a **fixed pool of worldviews**, independently — there is no credence weighting. For each worldview it shows:
+
+- The value it assigns to each of the two allocations (a diminishing-returns-weighted integral of its marginal-value curve)
+- The **gap**, signed as Allocation 1 − Allocation 2 (negative means Allocation 1 trails)
+- The **dollars to close the gap** — how much the trailing allocation would need, allocated greedily by that worldview's own marginal preferences, to catch up (signed to match the gap, or `N/A` if unclosable within the cap)
+
+A final **Total (all worldviews)** row sums each allocation's score across every worldview, with the gap as the signed difference of those totals.
+
+A "Floor negative scores at 0" toggle clamps each allocation's score to 0 before the gap is computed. The two columns seed from `config/valueModeWorldviews.json` (column 1 = RP's recommended split, column 2 = concentrated on GiveWell) and restore on reset. Access directly at `#value` (no feature flag).
+
+The default worldview rows come from `config/valueModeWorldviews.json`, but a **"Load worldviews from share link"** button lets you replace them with the worldview set saved at any Table Mode share link (paste the link or just its `s=` code). The imported set survives reload (sessionStorage) until you restore the default; it isn't shareable.
+
+Scoring lives in `src/utils/valueScoring.js` (pure, parameterised functions), state in `src/hooks/useValueState.js`, and the worldview pool + seed allocations in `config/valueModeWorldviews.json`. See **CLAUDE.md** → *Value Mode* for the full breakdown.
 
 ---
 
@@ -183,6 +199,7 @@ donor-compass/
 │   ├── features.json               # Feature flags for toggling functionality
 │   ├── questions.json              # Question definitions and worldview dimensions (legacy quiz)
 │   ├── simpleQuizConfig.json       # Simple quiz question definitions + preset options
+│   ├── valueModeWorldviews.json    # Value mode worldview pool + seed allocations
 │   └── worldviewPresets.json       # Worldview presets + default worldview template
 │
 ├── src/
@@ -208,6 +225,9 @@ donor-compass/
 │   │   │   ├── SimpleMoreOptions.jsx     # Expanded options + manual inputs
 │   │   │   └── SimpleResultsScreen.jsx   # Bar chart results
 │   │   │
+│   │   ├── value/                        # Value mode components
+│   │   │   └── ValueModeScreen.jsx       # Two-allocation grid + per-worldview scoring rows
+│   │   │
 │   │   ├── ui/                         # Reusable UI components
 │   │   │   ├── OptionButton.jsx        # Quick selection button
 │   │   │   ├── CredenceSlider.jsx      # Full-size slider for questions
@@ -231,12 +251,18 @@ donor-compass/
 │   │   ├── QuizContext.jsx         # Legacy quiz state provider and hooks
 │   │   ├── useQuiz.js              # Custom hook for consuming quiz context
 │   │   ├── SimpleQuizContext.jsx   # Simple quiz state (useReducer + session persistence)
-│   │   └── useSimpleQuiz.js        # Custom hook for simple quiz context
+│   │   ├── useSimpleQuiz.js        # Custom hook for simple quiz context
+│   │   └── DatasetContext.jsx      # Dataset provider (projects, budget, DR step, labels)
+│   │
+│   ├── hooks/                      # Custom hooks
+│   │   └── useValueState.js        # Value mode state (allocations, floor toggle, derived rows)
 │   │
 │   ├── utils/                      # Pure utility functions
 │   │   ├── calculations.js         # All calculation logic
 │   │   ├── projectScoring.js       # Shared scoring engine (calculateProject, adjustForExtinctionRisk)
 │   │   ├── simpleQuizScoring.js    # Simple quiz: assembleWorldview, computeSimpleScores
+│   │   ├── valueScoring.js         # Value mode scoring engine (pure functions)
+│   │   ├── validateValueModeWorldviews.js  # Validates valueModeWorldviews.json (CI)
 │   │   ├── shareUrl.js             # URL encoding/decoding for sharing results
 │   │   ├── validateCauses.js       # Validates causes.json on startup
 │   │   └── validateQuestions.js    # Validates questions.json on startup

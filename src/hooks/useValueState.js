@@ -4,11 +4,13 @@ import { computeBase, evaluateWorldviewRow } from '../utils/valueScoring';
 import valueModeWorldviews from '../../config/valueModeWorldviews.json';
 
 const STORAGE_KEY = 'value_state';
-const STATE_VERSION = 3;
+const STATE_VERSION = 4;
 
-// Worldviews shown as rows. Sourced from a mode-specific config file so they can
-// be edited independently of the quiz/table presets — discrepancies between
-// this file and the others are intentional and not a dev concern.
+// Default worldviews shown as rows. Sourced from a mode-specific config file so
+// they can be edited independently of the quiz/table presets — discrepancies
+// between this file and the others are intentional and not a dev concern. The
+// user can replace these at runtime by importing a Table Mode share link (see
+// `worldviewOverride`).
 const WORLDVIEW_POOL = valueModeWorldviews.worldviews;
 
 // Non-DR-derived calc defaults. drStepSize comes from the dataset; the rest are
@@ -67,9 +69,16 @@ function loadSavedState() {
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed.version !== STATE_VERSION) return null;
-    const { allocations, floorNegativeScores } = parsed.state;
+    const { allocations, floorNegativeScores, worldviewOverride } = parsed.state;
     if (!Array.isArray(allocations) || allocations.length !== 2) return null;
-    return { allocations, floorNegativeScores: !!floorNegativeScores };
+    return {
+      allocations,
+      floorNegativeScores: !!floorNegativeScores,
+      // An imported set, or null to use the config default. Must be a non-empty
+      // array if present.
+      worldviewOverride:
+        Array.isArray(worldviewOverride) && worldviewOverride.length ? worldviewOverride : null,
+    };
   } catch {
     return null;
   }
@@ -122,8 +131,17 @@ export function useValueState() {
     () => loadSavedState()?.floorNegativeScores ?? false
   );
 
+  // Worldview rows come from the config pool by default, or from a set the user
+  // imported from a Table Mode share link. Null = use the config default.
+  // Persisted (sessionStorage) so an import survives reload, nothing harder.
+  const [worldviewOverride, setWorldviewOverride] = useState(
+    () => loadSavedState()?.worldviewOverride ?? null
+  );
+
+  const activePool = worldviewOverride ?? WORLDVIEW_POOL;
+
   // Memoise each worldview's expensive base computation by identity.
-  const bases = useMemo(() => WORLDVIEW_POOL.map((wv) => computeBase(data, wv)), [data]);
+  const bases = useMemo(() => activePool.map((wv) => computeBase(data, wv)), [data, activePool]);
 
   // Derived per-worldview rows — instant on every allocation keystroke.
   const rowParams = useMemo(
@@ -133,13 +151,23 @@ export function useValueState() {
 
   const rows = useMemo(
     () =>
-      WORLDVIEW_POOL.map((wv, i) => ({
+      activePool.map((wv, i) => ({
         name: wv.name,
         worldview: wv,
         ...evaluateWorldviewRow(data, allocations[0], allocations[1], bases[i], rowParams),
       })),
-    [data, allocations, bases, rowParams]
+    [data, allocations, bases, rowParams, activePool]
   );
+
+  // Totals row: each allocation's score summed across all worldviews, and the
+  // gap as the signed difference of those two totals (Σv1 − Σv2). Because the
+  // per-row gaps are now signed (value1 − value2), this also equals the sum of
+  // the per-row gaps exactly — the "same number two ways" holds.
+  const totals = useMemo(() => {
+    const value1 = rows.reduce((sum, r) => sum + r.value1, 0);
+    const value2 = rows.reduce((sum, r) => sum + r.value2, 0);
+    return { value1, value2, gap: value1 - value2 };
+  }, [rows]);
 
   // Dataset label metadata, for rendering the per-worldview values tooltip.
   const labels = useMemo(
@@ -151,11 +179,14 @@ export function useValueState() {
     [dataset.moralWeightKeys, dataset.discountFactorLabels, dataset.riskProfileOptions]
   );
 
-  // Persist allocations + toggle (debounced).
+  // Persist allocations + toggle + imported worldviews (debounced).
   useEffect(() => {
-    const t = setTimeout(() => saveState({ allocations, floorNegativeScores }), 300);
+    const t = setTimeout(
+      () => saveState({ allocations, floorNegativeScores, worldviewOverride }),
+      300
+    );
     return () => clearTimeout(t);
-  }, [allocations, floorNegativeScores]);
+  }, [allocations, floorNegativeScores, worldviewOverride]);
 
   const setAllocation = useCallback((colIndex, projectId, value) => {
     setAllocations((prev) => {
@@ -174,15 +205,29 @@ export function useValueState() {
     );
   }, [projectList, dataset.budget]);
 
+  // Replace the worldview rows with an imported set (from a share link).
+  const importWorldviews = useCallback((worldviews) => {
+    setWorldviewOverride(worldviews);
+  }, []);
+
+  // Drop the imported set and go back to the config default.
+  const restoreDefaultWorldviews = useCallback(() => {
+    setWorldviewOverride(null);
+  }, []);
+
   return {
     projectList,
     allocations,
     rows,
+    totals,
     labels,
     params,
     floorNegativeScores,
     setFloorNegativeScores,
     setAllocation,
     resetAllocations,
+    worldviewsImported: worldviewOverride != null,
+    importWorldviews,
+    restoreDefaultWorldviews,
   };
 }

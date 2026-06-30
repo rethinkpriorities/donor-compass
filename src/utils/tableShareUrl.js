@@ -69,11 +69,38 @@ export async function generateTableShareUrl(state) {
 }
 
 /**
- * Parse a Table Mode share URL: detect hash, fetch data, validate type.
+ * Pull a Table Mode share id out of arbitrary user input: a full share URL
+ * (`https://…/#table&s=<id>`), a bare hash fragment (`#table&s=<id>`), or just
+ * the code on its own (`<id>`). Returns the id, or null if none is found.
+ *
+ * @param {string} input
+ * @returns {string|null}
+ */
+export function extractTableShareId(input) {
+  if (typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // A full URL or hash fragment carries the id after `&s=` (or `?s=`).
+  const match = trimmed.match(/[&?]s=([^&\s]+)/);
+  if (match) return match[1];
+
+  // Otherwise treat the whole thing as a bare code, but only if it looks like
+  // one (no scheme, slashes, or whitespace) — so we don't feed a malformed URL
+  // to the API as an id.
+  if (/^[A-Za-z0-9_-]+$/.test(trimmed)) return trimmed;
+
+  return null;
+}
+
+/**
+ * Fetch a Table Mode share by id and validate it. Shared by the hash-based
+ * loader (`parseTableShareUrl`) and the value-mode worldview importer.
+ *
+ * @param {string} shareId
  * @returns {Promise<Object|null>} Table state or { error } or null
  */
-export async function parseTableShareUrl() {
-  const { shareId } = parseTableHash();
+export async function fetchTableShareById(shareId) {
   if (!shareId) return null;
 
   try {
@@ -118,4 +145,13 @@ export async function parseTableShareUrl() {
     console.error('[Share] Failed to load table share data:', err);
     return { error: 'Failed to load shared configuration' };
   }
+}
+
+/**
+ * Parse a Table Mode share URL: detect hash, fetch data, validate type.
+ * @returns {Promise<Object|null>} Table state or { error } or null
+ */
+export async function parseTableShareUrl() {
+  const { shareId } = parseTableHash();
+  return fetchTableShareById(shareId);
 }

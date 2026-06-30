@@ -6,20 +6,20 @@
       {
         "label": "RP recommended split",
         "weights": {
-          "givewell": 0.13,
-          "leaf": 0.05,
-          "ea_awf": 0.13,
-          "navigation_fund_general": 0.17,
-          "navigation_fund_cagefree": 0.16,
-          "sentinel_bio": 0.09,
-          "longview_nuclear": 0.04,
-          "longview_ai": 0.23
+          "givewell": 0.065,
+          "leaf": 0.025,
+          "ea_awf": 0.065,
+          "navigation_fund_general": 0.085,
+          "navigation_fund_cagefree": 0.08,
+          "sentinel_bio": 0.045,
+          "longview_nuclear": 0.02,
+          "longview_ai": 0.115
         }
       },
       {
         "label": "Concentrated on GiveWell",
         "weights": {
-          "givewell": 1.0
+          "givewell": 0.5
         }
       }
     ]

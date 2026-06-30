@@ -140,11 +140,26 @@ describe('evaluateWorldviewRow', () => {
 
     expect(r.value1).toBeCloseTo(60, 9); // 20 * 3
     expect(r.value2).toBeCloseTo(100, 9); // 20 * 5
-    expect(r.gap).toBeCloseTo(40, 9);
+    expect(r.gap).toBeCloseTo(-40, 9); // signed value1 − value2 (allocation 1 trails)
     expect(r.laggingIs1).toBe(true); // Allocation 1 scores lower
     // Marginal 20/$M, so closing a 40 gap needs 2 more dollars on allocation 1.
     expect(r.close.closed).toBe(true);
     expect(r.close.dollars).toBeCloseTo(2, 9);
+  });
+
+  it('signs the gap positive when allocation 1 leads, funding allocation 2 to catch up', () => {
+    const data = { p1: makeProject(10, [1, 1, 1, 1, 1, 1]) }; // flat DR
+    const base = computeBase(data, worldview(2)); // base 20, marginal 20/$M
+    const params = { drStepSize: 1, step: 1, chunk: 1, maxDollars: 1000 };
+    // Allocation 1 funds more than allocation 2 — so allocation 1 leads.
+    const r = evaluateWorldviewRow(data, { p1: 5 }, { p1: 3 }, base, params);
+
+    expect(r.value1).toBeCloseTo(100, 9);
+    expect(r.value2).toBeCloseTo(60, 9);
+    expect(r.gap).toBeCloseTo(40, 9); // signed: 100 − 60 (positive, allocation 1 leads)
+    expect(r.laggingIs1).toBe(false); // allocation 2 trails and catches up
+    expect(r.close.closed).toBe(true);
+    expect(r.close.dollars).toBeCloseTo(2, 9); // magnitude unchanged
   });
 
   it('reports N/A when the lagging allocation cannot catch up within the cap', () => {
@@ -152,8 +167,9 @@ describe('evaluateWorldviewRow', () => {
     const base = computeBase(data, worldview(1)); // marginal 10/$M
     const params = { drStepSize: 1, step: 1, chunk: 1, maxDollars: 3 };
     const r = evaluateWorldviewRow(data, {}, { p1: 5 }, base, params);
-    // Gap is 50; at 10/$M the cap of $3M only adds 30 — unclosable.
-    expect(r.gap).toBeCloseTo(50, 9);
+    // Gap is −50 (allocation 1 empty, trails); at 10/$M the cap of $3M only
+    // adds 30 to allocation 1 — unclosable. Catch-up calc uses the magnitude.
+    expect(r.gap).toBeCloseTo(-50, 9);
     expect(r.close.closed).toBe(false);
   });
 
@@ -176,7 +192,7 @@ describe('evaluateWorldviewRow', () => {
       });
       expect(r.value1).toBe(0); // -50 floored
       expect(r.value2).toBeCloseTo(30, 9);
-      expect(r.gap).toBeCloseTo(30, 9);
+      expect(r.gap).toBeCloseTo(-30, 9); // signed: 0 − 30
       expect(r.laggingIs1).toBe(true);
       // Allocation 1 must add 30 of value; pos marginal is 10/$M -> $3M.
       expect(r.close.closed).toBe(true);
@@ -197,7 +213,7 @@ describe('evaluateWorldviewRow', () => {
     it('without the flag, the negative score stands and widens the gap', () => {
       const r = evaluateWorldviewRow(data, { neg: 5 }, { pos: 3 }, base, params);
       expect(r.value1).toBeCloseTo(-50, 9);
-      expect(r.gap).toBeCloseTo(80, 9); // |-50 - 30|
+      expect(r.gap).toBeCloseTo(-80, 9); // signed: -50 − 30
     });
   });
 });

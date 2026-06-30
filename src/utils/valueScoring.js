@@ -171,9 +171,15 @@ export function dollarsToCloseGap(
 
 /**
  * Full per-worldview output row: how one worldview values each of the two
- * allocations, the gap between those two scores, which allocation lags, and the
- * dollars that lagging allocation would need — allocated greedily by this same
- * worldview — to match the other allocation's score.
+ * allocations, the signed gap between those two scores, which allocation lags,
+ * and the dollars that lagging allocation would need — allocated greedily by
+ * this same worldview — to match the other allocation's score.
+ *
+ * `gap` is signed as **value1 − value2**: positive when allocation 1 leads,
+ * negative when it trails. This is a presentation choice — the catch-up
+ * calculation is unaffected: it always works on the gap's *magnitude* and
+ * always funds whichever allocation scores lower. Callers sign the displayed
+ * dollar figure to match `gap` (negative gap → negative catch-up dollars).
  *
  * The catch-up dollars are added to whichever allocation this worldview scores
  * lower, with diminishing returns continuing from that allocation's current
@@ -197,9 +203,10 @@ export function evaluateWorldviewRow(data, alloc1, alloc2, base, params = {}) {
   const raw2 = allocationValue(data, base, alloc2, params);
   const value1 = params.floorNegativeScores ? Math.max(0, raw1) : raw1;
   const value2 = params.floorNegativeScores ? Math.max(0, raw2) : raw2;
-  const gap = Math.abs(value1 - value2);
+  // Signed for display; the catch-up calc below uses the magnitude.
+  const gap = value1 - value2;
   const laggingIs1 = value1 < value2;
   const laggingAlloc = laggingIs1 ? alloc1 : alloc2;
-  const close = dollarsToCloseGap(data, base, laggingAlloc, gap, params);
+  const close = dollarsToCloseGap(data, base, laggingAlloc, Math.abs(gap), params);
   return { value1, value2, gap, laggingIs1, close };
 }
