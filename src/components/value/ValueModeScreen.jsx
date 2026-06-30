@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useValueState } from '../../hooks/useValueState';
 import PreciseNumberInput from '../ui/PreciseNumberInput';
 import InfoTooltip from '../ui/InfoTooltip';
+import LoadWorldviewsModal from './LoadWorldviewsModal';
 import styles from '../../styles/components/ValueMode.module.css';
 
 // Build a markdown breakdown of a worldview's exact input values for the
@@ -52,9 +54,11 @@ function formatScore(n) {
 }
 
 function formatDollars(m) {
-  // m is in $millions.
-  if (m >= 1000) return `$${(m / 1000).toFixed(2)}B`;
-  return `$${m.toFixed(m < 10 ? 2 : 1)}M`;
+  // m is in $millions, and may be signed (negative when allocation 1 lags).
+  const sign = m < 0 ? '-' : '';
+  const abs = Math.abs(m);
+  if (abs >= 1000) return `${sign}$${(abs / 1000).toFixed(2)}B`;
+  return `${sign}$${abs.toFixed(abs < 10 ? 2 : 1)}M`;
 }
 
 /**
@@ -68,12 +72,18 @@ function ValueModeScreen() {
     projectList,
     allocations,
     rows,
+    totals,
     labels,
     floorNegativeScores,
     setFloorNegativeScores,
     setAllocation,
     resetAllocations,
+    worldviewsImported,
+    importWorldviews,
+    restoreDefaultWorldviews,
   } = useValueState();
+
+  const [showLoadModal, setShowLoadModal] = useState(false);
 
   return (
     <div className={styles.container}>
@@ -95,16 +105,32 @@ function ValueModeScreen() {
                 size={13}
               />
             </label>
+            <button className={styles.resetButton} onClick={() => setShowLoadModal(true)}>
+              Load worldviews from share link
+            </button>
             <button className={styles.resetButton} onClick={resetAllocations}>
               Reset allocations
             </button>
           </div>
         </div>
+
+        {worldviewsImported && (
+          <div className={styles.importBanner}>
+            <span>
+              Showing {rows.length} worldview{rows.length === 1 ? '' : 's'} imported from a share
+              link.
+            </span>
+            <button className={styles.bannerLink} onClick={restoreDefaultWorldviews}>
+              Restore default worldviews
+            </button>
+          </div>
+        )}
         <p className={styles.intro}>
-          Enter two allocations of dollars (in $millions) across the funds. For each worldview
-          below: its value of each allocation, the gap between them, and how many more dollars the
-          lagging allocation would need — allocated optimally by that worldview’s own lights — to
-          close the gap.
+          Enter two allocations of dollars (in $millions) across the funds. Each worldview below
+          scores both allocations. Gap is Allocation 1 − Allocation 2 (negative means Allocation 1
+          trails), and “$ to close gap” is the dollars the trailing allocation would need —
+          allocated optimally by that worldview’s own lights — to catch up, signed to match. The
+          final row totals each column across all worldviews.
         </p>
 
         <table className={styles.grid}>
@@ -156,7 +182,9 @@ function ValueModeScreen() {
             </tr>
 
             {rows.map((r, i) => {
-              const lagLabel = r.laggingIs1 ? 'Allocation 1' : 'Allocation 2';
+              // Sign the catch-up dollars to match the signed gap: negative when
+              // allocation 1 lags (gap < 0), positive when allocation 2 lags.
+              const signedDollars = r.gap < 0 ? -r.close.dollars : r.close.dollars;
               return (
                 <tr key={i} className={styles.outputRow}>
                   <td className={styles.rowLabel}>
@@ -169,31 +197,45 @@ function ValueModeScreen() {
                   <td className={styles.scoreCell}>{formatScore(r.value2)}</td>
                   <td className={styles.gapCell}>{formatScore(r.gap)}</td>
                   <td className={styles.dollarCell}>
-                    {r.gap <= 1e-9 ? (
+                    {Math.abs(r.gap) <= 1e-9 ? (
                       <span className={styles.naValue}>—</span>
                     ) : r.close.closed ? (
-                      <>
-                        <span className={styles.dollarValue}>{formatDollars(r.close.dollars)}</span>
-                        <span className={styles.lagNote}>{lagLabel} lags</span>
-                      </>
+                      <span className={styles.dollarValue}>{formatDollars(signedDollars)}</span>
                     ) : (
-                      <>
-                        <span
-                          className={styles.naValue}
-                          title={`Unclosable within cap; short by ${formatScore(r.close.shortfall)}`}
-                        >
-                          N/A
-                        </span>
-                        <span className={styles.lagNote}>{lagLabel} lags</span>
-                      </>
+                      <span
+                        className={styles.naValue}
+                        title={`Unclosable within cap; short by ${formatScore(r.close.shortfall)}`}
+                      >
+                        N/A
+                      </span>
                     )}
                   </td>
                 </tr>
               );
             })}
+
+            {/* Totals: scores summed across all worldviews; gap is the
+                difference of the two totals (|Σv1 − Σv2|). No catch-up figure. */}
+            <tr className={styles.totalsRow}>
+              <td className={styles.rowLabel}>Total (all worldviews)</td>
+              <td className={styles.scoreCell}>{formatScore(totals.value1)}</td>
+              <td className={styles.scoreCell}>{formatScore(totals.value2)}</td>
+              <td className={styles.gapCell}>{formatScore(totals.gap)}</td>
+              <td className={styles.dollarCell} />
+            </tr>
           </tbody>
         </table>
       </div>
+
+      {showLoadModal && (
+        <LoadWorldviewsModal
+          onClose={() => setShowLoadModal(false)}
+          onLoad={(worldviews) => {
+            importWorldviews(worldviews);
+            setShowLoadModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
